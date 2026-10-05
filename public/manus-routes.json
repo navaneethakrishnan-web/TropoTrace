@@ -1,0 +1,14 @@
+{
+  "routes": [
+    { "path": "/", "title": "Command Center" },
+    { "path": "/storm-intelligence", "title": "Storm Intelligence" },
+    { "path": "/hazard-explorer", "title": "Hazard Explorer" },
+    { "path": "/impact-intelligence", "title": "Impact Intelligence" },
+    { "path": "/alert-center", "title": "Alert Center" },
+    { "path": "/data-observatory", "title": "Data Observatory" },
+    { "path": "/simulation-lab", "title": "Simulation Lab" },
+    { "path": "/verification", "title": "Verification" },
+    { "path": "/analyst", "title": "VAJRA Analyst" },
+    { "path": "/settings", "title": "Settings" }
+  ]
+}
