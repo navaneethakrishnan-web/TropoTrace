@@ -28,7 +28,7 @@ export function AnalystView() {
       sender: 'analyst',
       text: `Hello Operator. I am **Tropo**, your AI-powered meteorological copilot grounded in the live convective nowcast state for **${cell.name} (${cell.id})**. I'm powered by advanced AI to provide intelligent, context-aware storm analysis.\n\nSelect a question from the left panel or type any meteorological inquiry — I can analyze cell kinematics, active hazards, impact exposure, sensor consensus, and much more.`,
       timestamp: 'Just now',
-      citations: ['Live Convective State Snapshot', 'Groq AI (LLaMA 3.3 70B)'],
+      citations: ['Live Convective State Snapshot', 'Groq AI (GPT-OSS 120B)'],
       evidenceConfidence: 98,
     },
   ])
@@ -109,7 +109,7 @@ export function AnalystView() {
           <h2>Tropo</h2>
           <p>
             AI-powered conversational copilot grounded in active radar, satellite, and nowcast
-            telemetry. Powered by Groq LLaMA 3.3 70B for intelligent analysis.
+            telemetry. Powered by Groq GPT-OSS 120B for intelligent analysis.
           </p>
         </div>
 
@@ -172,7 +172,7 @@ export function AnalystView() {
             </div>
             <div>
               <b>TROPO AI COPILOT</b>
-              <span>Synchronized with T+{Math.round(snapshot.minute)}m nowcast telemetry · Groq LLaMA 3.3</span>
+              <span>Synchronized with T+{Math.round(snapshot.minute)}m nowcast telemetry · Groq GPT-OSS 120B</span>
             </div>
             <span className="copilot-ready-tag">
               <span className={`status-dot ${isLoading ? 'amber' : 'green'}`} />
@@ -259,7 +259,7 @@ export function AnalystView() {
           <div className="analyst-footnote">
             <Info size={12} />
             <span>
-              Tropo is powered by <b>Groq AI (LLaMA 3.3 70B)</b> and grounded in live scenario data.
+              Tropo is powered by <b>Groq AI (GPT-OSS 120B)</b> and grounded in live scenario data.
               All responses are evidence-based with cited sources and confidence scores.
             </span>
           </div>
