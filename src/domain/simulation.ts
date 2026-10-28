@@ -138,17 +138,18 @@ function buildImpact(cell: StormCell, modeFactor = 1): ImpactAssets {
   }
 }
 
-export function createSnapshot(scenario: ScenarioKey, minute: number, modeFactor = 1): SimulationSnapshot {
+export function createSnapshot(scenario: ScenarioKey, minute: number, modeFactor = 1, selectedCellId?: string): SimulationSnapshot {
   const definition = getDefinition(scenario)
   const normalizedMinute = ((minute % 360) + 360) % 360
   const primary = createCell(definition, normalizedMinute)
   const cells = scenario === 'multi-cell' ? [primary, createCell(definition, normalizedMinute + 17, 1)] : [primary]
+  const activeCell = cells.find((c) => c.id === selectedCellId) ?? primary
   const sources = sourceSet(normalizedMinute)
   const consensus = round(sources.reduce((sum, source) => sum + source.confidence, 0) / sources.length)
-  const confidence = round(clamp(primary.confidence * 0.64 + consensus * 0.36))
-  const hazards = buildHazards(primary, definition)
-  const severe = primary.intensity >= 76 || hazards.some((hazard) => hazard.probability >= 82)
-  const severity: SimulationSnapshot['severity'] = severe ? 'SEVERE' : primary.intensity >= 62 ? 'WARNING' : primary.intensity >= 49 ? 'ALERT' : primary.intensity >= 35 ? 'WATCH' : 'NORMAL'
+  const confidence = round(clamp(activeCell.confidence * 0.64 + consensus * 0.36))
+  const hazards = buildHazards(activeCell, definition)
+  const severe = activeCell.intensity >= 76 || hazards.some((hazard) => hazard.probability >= 82)
+  const severity: SimulationSnapshot['severity'] = severe ? 'SEVERE' : activeCell.intensity >= 62 ? 'WARNING' : activeCell.intensity >= 49 ? 'ALERT' : activeCell.intensity >= 35 ? 'WATCH' : 'NORMAL'
   const localDate = new Date(Date.UTC(2026, 9, 3, 11, 34, 0) + normalizedMinute * 60000)
   return {
     scenario,
@@ -156,22 +157,22 @@ export function createSnapshot(scenario: ScenarioKey, minute: number, modeFactor
     minute: normalizedMinute,
     timestamp: localDate.toISOString(),
     cells,
-    selectedCellId: primary.id,
+    selectedCellId: activeCell.id,
     hazards,
     sources,
     consensus,
-    impact: buildImpact(primary, modeFactor),
+    impact: buildImpact(activeCell, modeFactor),
     severity,
-    highRiskAreaKm2: round(primary.areaKm2 * (0.38 + primary.intensity / 180)),
-    nextArrivalMinutes: primary.arrivalMinutes,
+    highRiskAreaKm2: round(activeCell.areaKm2 * (0.38 + activeCell.intensity / 180)),
+    nextArrivalMinutes: activeCell.arrivalMinutes,
     confidence,
-    lightningTotal: round(primary.lightningRate * (1.7 + normalizedMinute / 120)),
+    lightningTotal: round(activeCell.lightningRate * (1.7 + normalizedMinute / 120)),
     changes: [
-      { label: 'Lightning', value: `+${round(31 + primary.lightningRate * 0.2)}%`, trend: 'up' },
-      { label: 'Reflectivity', value: `+${round(12 + primary.intensity * 0.09)}%`, trend: 'up' },
-      { label: 'Storm area', value: `+${round(6 + primary.areaKm2 / 75)}%`, trend: 'up' },
-      { label: 'Wind', value: `+${round(8 + primary.intensity * 0.06)} km/h`, trend: 'up' },
-      { label: 'Rainfall', value: `+${round(11 + primary.rainfallRate * 0.12)} mm/h`, trend: 'up' },
+      { label: 'Lightning', value: `+${round(31 + activeCell.lightningRate * 0.2)}%`, trend: 'up' },
+      { label: 'Reflectivity', value: `+${round(12 + activeCell.intensity * 0.09)}%`, trend: 'up' },
+      { label: 'Storm area', value: `+${round(6 + activeCell.areaKm2 / 75)}%`, trend: 'up' },
+      { label: 'Wind', value: `+${round(8 + activeCell.intensity * 0.06)} km/h`, trend: 'up' },
+      { label: 'Rainfall', value: `+${round(11 + activeCell.rainfallRate * 0.12)} mm/h`, trend: 'up' },
     ],
   }
 }

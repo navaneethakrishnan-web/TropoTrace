@@ -7,8 +7,8 @@
     { "path": "/alert-center", "title": "Alert Center" },
     { "path": "/data-observatory", "title": "Data Observatory" },
     { "path": "/simulation-lab", "title": "Simulation Lab" },
-    { "path": "/verification", "title": "Verification" },
-    { "path": "/analyst", "title": "VAJRA Analyst" },
-    { "path": "/settings", "title": "Settings" }
+    { "path": "/verification", "title": "Model Verification" },
+    { "path": "/analyst", "title": "Tropo" },
+    { "path": "/settings", "title": "System Settings" }
   ]
 }

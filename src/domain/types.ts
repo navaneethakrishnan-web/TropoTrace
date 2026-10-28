@@ -121,3 +121,60 @@ export interface ScenarioDefinition {
   rainfallGrowth: number
   primaryHazard: HazardKey
 }
+
+export interface AlertItem {
+  id: string
+  stormId: string
+  scenario: ScenarioKey
+  title: string
+  hazard: HazardKey
+  severity: Severity
+  area: string
+  timestamp: string
+  message: string
+  status: 'ACTIVE' | 'REVIEWED' | 'DISMISSED'
+  confidence: number
+  recommendedAction: string
+  isCustom?: boolean
+}
+
+export interface RawObservationRecord {
+  id: string
+  source: string
+  variable: string
+  value: number | string
+  unit: string
+  status: 'VALID' | 'SYNTHETIC' | 'FLAGGED'
+  timestamp: string
+  coordinates: string
+}
+
+export interface VerificationMetric {
+  key: string
+  label: string
+  value: string
+  delta: string
+  description: string
+  formula: string
+  benchmark: string
+  isFavorable: boolean
+}
+
+export interface AnalystMessage {
+  id: string
+  sender: 'user' | 'analyst'
+  text: string
+  timestamp: string
+  citations?: string[]
+  evidenceConfidence?: number
+}
+
+export interface UserSettings {
+  showDemoBanner: boolean
+  reducedMotion: boolean
+  highContrast: boolean
+  autoStart: boolean
+  basemap: 'satellite' | 'street'
+  soundEnabled: boolean
+}
+

@@ -2,11 +2,11 @@ import type { ScenarioKey, SimulationSnapshot } from '../domain/types'
 import { createSnapshot } from '../domain/simulation'
 
 export interface VajraDataProvider {
-  getSnapshot: (scenario: ScenarioKey, minute: number, modeFactor?: number) => SimulationSnapshot
+  getSnapshot: (scenario: ScenarioKey, minute: number, modeFactor?: number, selectedCellId?: string) => SimulationSnapshot
 }
 
 export const demoProvider: VajraDataProvider = {
-  getSnapshot: (scenario, minute, modeFactor = 1) => createSnapshot(scenario, minute, modeFactor),
+  getSnapshot: (scenario, minute, modeFactor = 1, selectedCellId?: string) => createSnapshot(scenario, minute, modeFactor, selectedCellId),
 }
 
 // Future Antigravity/Firebase adapter seam:

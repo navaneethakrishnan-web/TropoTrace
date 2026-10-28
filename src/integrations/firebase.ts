@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as firebaseSignOut, type User } from 'firebase/auth'
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut as firebaseSignOut, type User } from 'firebase/auth'
 import { getFirestore, doc, setDoc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore'
 
 export interface FirebaseConfig {
@@ -40,6 +40,11 @@ export const signInWithEmail = async (email: string, password: string) => {
 export const createAccount = async (email: string, password: string) => {
   if (!auth) throw new Error('Firebase Auth is not initialized')
   return createUserWithEmailAndPassword(auth, email, password)
+}
+
+export const sendPasswordReset = async (email: string) => {
+  if (!auth) throw new Error('Firebase Auth is not initialized')
+  return sendPasswordResetEmail(auth, email)
 }
 
 export const signOut = async () => {
