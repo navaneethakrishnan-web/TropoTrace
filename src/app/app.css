@@ -5510,6 +5510,40 @@ select:focus-visible {
   background: var(--bg-secondary);
 }
 
+/* Tropo AI Loading Animation */
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+.loading-bubble {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--teal);
+  font-style: italic;
+  font-size: 12px;
+}
+
+.loading-bubble .spinning {
+  color: var(--teal);
+  flex-shrink: 0;
+}
+
+.status-dot.amber {
+  background: var(--amber);
+  box-shadow: 0 0 6px var(--amber);
+}
+
+.chat-input-bar input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.prompt-suggestion-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* ==========================================================================
    MODULE 10: SYSTEM SETTINGS
    ========================================================================== */

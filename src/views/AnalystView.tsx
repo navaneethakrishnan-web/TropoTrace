@@ -1,20 +1,17 @@
-import { useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import {
   Bot,
   Check,
-  CheckCircle2,
-  Clock,
-  HelpCircle,
   Info,
+  Loader2,
   MessageSquare,
   Radio,
   Send,
   ShieldCheck,
   Sparkles,
-  Zap,
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
-import { generateAnalystResponse, SUGGESTED_PROMPTS } from '../domain/analyst'
+import { generateAnalystResponseAsync, SUGGESTED_PROMPTS } from '../domain/analyst'
 import type { AnalystMessage } from '../domain/types'
 
 export function AnalystView() {
@@ -22,41 +19,82 @@ export function AnalystView() {
   const cell = snapshot.cells.find((c) => c.id === selectedCellId) ?? snapshot.cells[0]
 
   const [inputQuery, setInputQuery] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const chatContainerRef = useRef<HTMLDivElement>(null)
+
   const [messages, setMessages] = useState<AnalystMessage[]>([
     {
       id: 'init-msg',
       sender: 'analyst',
-      text: `Hello Operator. I am **Tropo**, grounded strictly in the live convective nowcast state for **${cell.name} (${cell.id})**. Select a question from the left panel or type a meteorological inquiry regarding cell kinematics, active hazards, impact exposure, or sensor consensus.`,
+      text: `Hello Operator. I am **Tropo**, your AI-powered meteorological copilot grounded in the live convective nowcast state for **${cell.name} (${cell.id})**. I'm powered by advanced AI to provide intelligent, context-aware storm analysis.\n\nSelect a question from the left panel or type any meteorological inquiry — I can analyze cell kinematics, active hazards, impact exposure, sensor consensus, and much more.`,
       timestamp: 'Just now',
-      citations: ['Live Convective State Snapshot', 'Consensus Engine v1.0'],
+      citations: ['Live Convective State Snapshot', 'Groq AI (LLaMA 3.3 70B)'],
       evidenceConfidence: 98,
     },
   ])
 
-  const handleSend = (queryToSend = inputQuery) => {
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
+    }
+  }, [messages, isLoading])
+
+  const handleSend = async (queryToSend = inputQuery) => {
     const q = queryToSend.trim()
-    if (!q) return
+    if (!q || isLoading) return
 
     const userMsg: AnalystMessage = {
       id: `user-${Date.now()}`,
       sender: 'user',
       text: q,
-      timestamp: 'Now',
+      timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
     }
 
-    const { text, citations, evidenceConfidence } = generateAnalystResponse(q, snapshot, cell)
-
-    const analystMsg: AnalystMessage = {
-      id: `analyst-${Date.now()}`,
-      sender: 'analyst',
-      text,
-      timestamp: 'Now',
-      citations,
-      evidenceConfidence,
-    }
-
-    setMessages((prev) => [...prev, userMsg, analystMsg])
+    setMessages((prev) => [...prev, userMsg])
     setInputQuery('')
+    setIsLoading(true)
+
+    try {
+      const { text, citations, evidenceConfidence } = await generateAnalystResponseAsync(q, snapshot, cell)
+
+      const analystMsg: AnalystMessage = {
+        id: `analyst-${Date.now()}`,
+        sender: 'analyst',
+        text,
+        timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+        citations,
+        evidenceConfidence,
+      }
+
+      setMessages((prev) => [...prev, analystMsg])
+    } catch {
+      const errorMsg: AnalystMessage = {
+        id: `error-${Date.now()}`,
+        sender: 'analyst',
+        text: '**System Error:** Failed to process your query. Please try again.',
+        timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+        citations: ['System Diagnostics'],
+        evidenceConfidence: 0,
+      }
+      setMessages((prev) => [...prev, errorMsg])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Simple markdown bold rendering
+  const renderText = (text: string) => {
+    return text.split('\n\n').map((para, i) => (
+      <p key={i}>
+        {para.split(/(\*\*.*?\*\*)/).map((segment, j) => {
+          if (segment.startsWith('**') && segment.endsWith('**')) {
+            return <strong key={j}>{segment.slice(2, -2)}</strong>
+          }
+          return <span key={j}>{segment}</span>
+        })}
+      </p>
+    ))
   }
 
   return (
@@ -66,18 +104,18 @@ export function AnalystView() {
         <div>
           <div className="eyebrow">
             <span className="eyebrow-line" />
-            <span>MODULE 09 · GROUNDED METEOROLOGICAL COPILOT</span>
+            <span>MODULE 09 · AI-POWERED METEOROLOGICAL COPILOT</span>
           </div>
           <h2>Tropo</h2>
           <p>
-            Structured conversational assistant grounded strictly in active radar, satellite, and nowcast
-            telemetry. Free from ungrounded hallucinations.
+            AI-powered conversational copilot grounded in active radar, satellite, and nowcast
+            telemetry. Powered by Groq LLaMA 3.3 70B for intelligent analysis.
           </p>
         </div>
 
         <div className="analyst-badge">
           <ShieldCheck size={14} />
-          <span>ZERO-HALLUCINATION POLICY ACTIVE</span>
+          <span>AI-GROUNDED ANALYSIS · ZERO-HALLUCINATION POLICY</span>
         </div>
       </div>
 
@@ -115,6 +153,7 @@ export function AnalystView() {
                   key={idx}
                   className="prompt-suggestion-btn"
                   onClick={() => handleSend(p.question)}
+                  disabled={isLoading}
                 >
                   <span className="prompt-category-tag">{p.category}</span>
                   <span className="prompt-text">{p.question}</span>
@@ -132,17 +171,17 @@ export function AnalystView() {
               <Bot size={20} />
             </div>
             <div>
-              <b>TROPO COPILOT</b>
-              <span>Synchronized with T+{Math.round(snapshot.minute)}m nowcast telemetry</span>
+              <b>TROPO AI COPILOT</b>
+              <span>Synchronized with T+{Math.round(snapshot.minute)}m nowcast telemetry · Groq LLaMA 3.3</span>
             </div>
             <span className="copilot-ready-tag">
-              <span className="status-dot green" />
-              <span>READY</span>
+              <span className={`status-dot ${isLoading ? 'amber' : 'green'}`} />
+              <span>{isLoading ? 'THINKING' : 'READY'}</span>
             </span>
           </div>
 
           {/* Messages Stream */}
-          <div className="chat-messages-container">
+          <div className="chat-messages-container" ref={chatContainerRef}>
             {messages.map((m) => (
               <div
                 key={m.id}
@@ -150,15 +189,13 @@ export function AnalystView() {
               >
                 <div className="bubble-header">
                   <span className="sender-name">
-                    {m.sender === 'user' ? 'OPERATOR' : 'TROPO'}
+                    {m.sender === 'user' ? 'OPERATOR' : 'TROPO AI'}
                   </span>
                   <span className="bubble-time">{m.timestamp}</span>
                 </div>
 
                 <div className="bubble-body">
-                  {m.text.split('\n\n').map((para, i) => (
-                    <p key={i}>{para}</p>
-                  ))}
+                  {renderText(m.text)}
                 </div>
 
                 {/* Evidence Citations */}
@@ -182,33 +219,48 @@ export function AnalystView() {
                 )}
               </div>
             ))}
+
+            {/* Loading indicator */}
+            {isLoading && (
+              <div className="chat-message-bubble analyst-bubble">
+                <div className="bubble-header">
+                  <span className="sender-name">TROPO AI</span>
+                  <span className="bubble-time">analyzing…</span>
+                </div>
+                <div className="bubble-body loading-bubble">
+                  <Loader2 size={16} className="spinning" />
+                  <span>Analyzing live convective state with AI…</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Input Box */}
           <div className="chat-input-bar">
             <input
               type="text"
-              placeholder="Ask a meteorological question about the active storm or scenario…"
+              placeholder="Ask any meteorological question about the active storm or scenario…"
               value={inputQuery}
               onChange={(e) => setInputQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+              disabled={isLoading}
               aria-label="Ask Tropo a question"
             />
             <button
               className="chat-send-btn"
               onClick={() => handleSend()}
-              disabled={!inputQuery.trim()}
+              disabled={!inputQuery.trim() || isLoading}
               aria-label="Send query"
             >
-              <Send size={15} />
+              {isLoading ? <Loader2 size={15} className="spinning" /> : <Send size={15} />}
             </button>
           </div>
 
           <div className="analyst-footnote">
             <Info size={12} />
             <span>
-              If asked about variables outside the current simulation state, the analyst will
-              strictly answer: <b>Insufficient current data in current scenario snapshot.</b>
+              Tropo is powered by <b>Groq AI (LLaMA 3.3 70B)</b> and grounded in live scenario data.
+              All responses are evidence-based with cited sources and confidence scores.
             </span>
           </div>
         </div>
