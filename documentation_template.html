@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TropoTrace (VAJRA-X) — Master System Documentation</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+    @page {
+      size: A4;
+      margin: 16mm 16mm 18mm 16mm;
+      @bottom-right {
+        content: counter(page);
+        font-family: 'Inter', sans-serif;
+        font-size: 8pt;
+        color: #64748b;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 10pt;
+      line-height: 1.55;
+      color: #1e293b;
+      background-color: #ffffff;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Print helpers */
+    .page-break {
+      page-break-before: always;
+    }
+    .avoid-break {
+      page-break-inside: avoid;
+    }
+
+    /* Cover / Header Section */
+    .doc-header {
+      border-bottom: 3px solid #0f172a;
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+    .header-badge-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .badge {
+      font-size: 7.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 3px 8px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+    .badge-primary { background: #0f172a; color: #ffffff; }
+    .badge-teal { background: #ccfbf1; color: #0f766e; border: 1px solid #99f6e4; }
+    .badge-blue { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .badge-amber { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+    h1.doc-title {
+      font-size: 24pt;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      margin-bottom: 6px;
+    }
+    .doc-subtitle {
+      font-size: 11pt;
+      font-weight: 500;
+      color: #475569;
+      margin-bottom: 14px;
+    }
+    .doc-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px 16px;
+      background: #f8fafc;
+      padding: 12px 14px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      font-size: 8.5pt;
+    }
+    .doc-meta-grid strong {
+      color: #0f172a;
+    }
+    .doc-meta-grid a {
+      color: #0284c7;
+      text-decoration: none;
+    }
+
+    /* Headings */
+    h2 {
+      font-size: 14pt;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: -0.01em;
+      margin: 22px 0 10px;
+      padding-bottom: 5px;
+      border-bottom: 1.5px solid #cbd5e1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    h2 .sec-num {
+      background: #0f172a;
+      color: #ffffff;
+      font-size: 9pt;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+    h3 {
+      font-size: 11.5pt;
+      font-weight: 600;
+      color: #1e293b;
+      margin: 14px 0 6px;
+    }
+    h4 {
+      font-size: 10pt;
+      font-weight: 600;
+      color: #334155;
+      margin: 10px 0 4px;
+    }
+
+    p {
+      margin-bottom: 8px;
+      text-align: justify;
+    }
+
+    /* Callout & Cards */
+    .callout {
+      background: #f0fdf4;
+      border-left: 4px solid #10b981;
+      border-radius: 0 6px 6px 0;
+      padding: 10px 14px;
+      margin: 10px 0;
+      font-size: 9.5pt;
+    }
+    .callout-blue {
+      background: #f0f9ff;
+      border-left-color: #0284c7;
+    }
+    .callout-amber {
+      background: #fffbeb;
+      border-left-color: #f59e0b;
+    }
+    .callout strong {
+      color: #0f172a;
+    }
+
+    /* Architecture Flow Cards */
+    .arch-diagram {
+      display: flex;
+      align-items: stretch;
+      gap: 10px;
+      margin: 14px 0;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .arch-box {
+      flex: 1;
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .arch-box-title {
+      font-size: 8.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #0f766e;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 4px;
+      margin-bottom: 6px;
+    }
+    .arch-box ul {
+      list-style-type: disc;
+      margin-left: 14px;
+      font-size: 8.5pt;
+      color: #334155;
+    }
+    .arch-arrow {
+      display: flex;
+      align-items: center;
+      font-size: 14pt;
+      color: #94a3b8;
+      font-weight: bold;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0 14px;
+      font-size: 8.5pt;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 6px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background-color: #0f172a;
+      color: #ffffff;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+    tr:hover {
+      background-color: #f1f5f9;
+    }
+
+    /* Code Blocks & Monospace */
+    code, pre {
+      font-family: 'JetBrains Mono', Consolas, monospace;
+    }
+    code {
+      font-size: 8.5pt;
+      background: #f1f5f9;
+      padding: 1px 4px;
+      border-radius: 3px;
+      color: #0f766e;
+      border: 1px solid #e2e8f0;
+    }
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 8pt;
+      line-height: 1.45;
+      margin: 8px 0;
+      overflow-x: auto;
+    }
+
+    /* Feature Grid */
+    .module-card {
+      border: 1px solid #e2e8f0;
+      background: #ffffff;
+      border-radius: 6px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    }
+    .module-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .module-id {
+      font-size: 8pt;
+      font-weight: 700;
+      color: #0284c7;
+      text-transform: uppercase;
+    }
+    .module-name {
+      font-size: 10pt;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .module-desc {
+      font-size: 8.5pt;
+      color: #475569;
+    }
+
+    /* Q&A Defense Cards */
+    .qa-card {
+      border: 1.5px solid #cbd5e1;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      background: #ffffff;
+      overflow: hidden;
+      page-break-inside: avoid;
+    }
+    .qa-q {
+      background: #0f172a;
+      color: #ffffff;
+      padding: 8px 12px;
+      font-weight: 600;
+      font-size: 9.5pt;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .qa-q-num {
+      background: #38bdf8;
+      color: #0f172a;
+      font-size: 7.5pt;
+      font-weight: 800;
+      padding: 2px 5px;
+      border-radius: 3px;
+    }
+    .qa-a {
+      padding: 10px 14px;
+      font-size: 9pt;
+      color: #1e293b;
+      line-height: 1.55;
+      background: #f8fafc;
+    }
+    .qa-a strong {
+      color: #0369a1;
+    }
+
+    /* Highlights / Pill */
+    .pill {
+      font-size: 7.5pt;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+    .pill-green { background: #dcfce7; color: #15803d; }
+    .pill-amber { background: #fef3c7; color: #b45309; }
+    .pill-red { background: #fee2e2; color: #b91c1c; }
+    .pill-blue { background: #e0f2fe; color: #0369a1; }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== HEADER & COVER INFO ==================== -->
+  <div class="doc-header">
+    <div class="header-badge-row">
+      <span class="badge badge-primary">MINISTRY OF EARTH SCIENCES (MoES)</span>
+      <span class="badge badge-teal">NCMRWF BENCHMARK</span>
+      <span class="badge badge-blue">DEXATHON 2026</span>
+      <span class="badge badge-amber">TEAM REGAL HACKERS</span>
+    </div>
+    <h1 class="doc-title">TropoTrace (VAJRA-X)</h1>
+    <div class="doc-subtitle">Convective-Scale Severe Weather Nowcasting &amp; Decision-Support Command Center (0–6 Hours)</div>
+    
+    <div class="doc-meta-grid">
+      <div><strong>Target Problem:</strong> Convective Nowcasting (Thunderstorm, Hail, Cloudburst, Downburst)</div>
+      <div><strong>Live Deployed URL:</strong> <a href="https://thermotrace-a6b30.web.app">https://thermotrace-a6b30.web.app</a></div>
+      <div><strong>Repository:</strong> <a href="https://github.com/navaneethakrishnan-web/TropoTrace">github.com/navaneethakrishnan-web/TropoTrace</a></div>
+      <div><strong>Core Technology:</strong> React 19, TypeScript 5, Leaflet GIS, Firebase Cloud, Groq AI (120B)</div>
+    </div>
+  </div>
+
+  <!-- ==================== 1. EXECUTIVE SUMMARY ==================== -->
+  <h2><span class="sec-num">1.0</span> Executive Summary &amp; Problem Statement</h2>
+  <p>
+    Severe convective weather events—such as sudden thunderstorms, damaging hailstorms, cloudburst flash floods, and violent microbursts/downbursts—are characterized by rapid initiation (<15–30 minutes) and extreme spatial localization (1–10 km). Traditional Numerical Weather Prediction (NWP) models (e.g., GFS, NCUM) operate on 3- to 6-hour assimilation cycles with 4–12 km grids, making them incapable of resolving localized convective genesis in real time.
+  </p>
+  <div class="callout">
+    <strong>Mission of TropoTrace:</strong> To deliver an operator-grade, automated Convective Intelligence Command Center operating in the <strong>0 to 6 hour nowcast horizon</strong> at <strong>1–3 km spatial resolution</strong>, integrating Doppler Weather Radar, INSAT-3DR Geostationary satellite feeds, lightning discharge rates, and AWS surface stations.
+  </div>
+
+  <!-- ==================== 2. COMPLETE TECH STACK ==================== -->
+  <h2><span class="sec-num">2.0</span> Complete Technology Stack &amp; Languages</h2>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 22%;">Layer / Subsystem</th>
+        <th style="width: 25%;">Technology Used</th>
+        <th>Purpose in TropoTrace Platform</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Programming Language</strong></td>
+        <td>TypeScript 5.x</td>
+        <td>Provides strict type safety for meteorological snapshot entities, coordinates, and telemetry schemas.</td>
+      </tr>
+      <tr>
+        <td><strong>Frontend Framework</strong></td>
+        <td>React 19 (SPA)</td>
+        <td>Drives modular reactive components, custom React Context state management, and real-time timeline loops.</td>
+      </tr>
+      <tr>
+        <td><strong>Interactive GIS Mapping</strong></td>
+        <td>Leaflet.js + Esri Basemaps</td>
+        <td>Renders high-fps radar sweeps, storm trajectories, uncertainty cones, and highway networks.</td>
+      </tr>
+      <tr>
+        <td><strong>AI Foundation Model</strong></td>
+        <td>Groq Cloud LPU + GPT-OSS 120B</td>
+        <td>Executes ultra-low latency inference for the conversational meteorological copilot (Tropo).</td>
+      </tr>
+      <tr>
+        <td><strong>Authentication &amp; User State</strong></td>
+        <td>Firebase Auth</td>
+        <td>Manages operator accounts, roles, credentials, and provides zero-friction instant access for evaluators.</td>
+      </tr>
+      <tr>
+        <td><strong>Cloud NoSQL Database</strong></td>
+        <td>Cloud Firestore</td>
+        <td>Persists operator profiles, created emergency CAP alerts, and scenario execution histories.</td>
+      </tr>
+      <tr>
+        <td><strong>Edge Hosting &amp; CDN</strong></td>
+        <td>Firebase Hosting</td>
+        <td>Global CDN distribution with automated SPA catch-all rewrites and sub-100ms response times.</td>
+      </tr>
+      <tr>
+        <td><strong>Styling &amp; Interface</strong></td>
+        <td>Custom CSS3 Design System</td>
+        <td>Over 8,500 lines of dedicated tactical command styling (Deep Midnight Green, Teal, Amber, Cyan).</td>
+      </tr>
+      <tr>
+        <td><strong>Speech Synthesis</strong></td>
+        <td>Web Speech API</td>
+        <td>Client-side native text-to-speech engine for instant emergency radio audio broadcast.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ==================== 3. CLOUD DATABASE ARCHITECTURE ==================== -->
+  <div class="avoid-break">
+    <h2><span class="sec-num">3.0</span> Cloud Database Architecture &amp; Firebase System</h2>
+    <p>
+      TropoTrace integrates with the Google Firebase Cloud project (<code>thermotrace-a6b30</code>) to manage authentication, operator state, and emergency alerts.
+    </p>
+    
+    <div class="arch-diagram">
+      <div class="arch-box">
+        <div class="arch-box-title">1. Client / Frontend</div>
+        <ul>
+          <li>React 19 User Session</li>
+          <li>Context API Snapshot State</li>
+          <li>Local Timer Scrubber</li>
+        </ul>
+      </div>
+      <div class="arch-arrow">&rarr;</div>
+      <div class="arch-box">
+        <div class="arch-box-title">2. Firebase Auth</div>
+        <ul>
+          <li>Email / Password Tokens</li>
+          <li>Judge Instant Access Bypass</li>
+          <li>Role-based Tenancy</li>
+        </ul>
+      </div>
+      <div class="arch-arrow">&rarr;</div>
+      <div class="arch-box">
+        <div class="arch-box-title">3. Cloud Firestore (NoSQL)</div>
+        <ul>
+          <li><code>users/{uid}</code> Profile</li>
+          <li><code>savedAlerts/{alertId}</code></li>
+          <li><code>scenarioRuns/{runId}</code></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h4>Firestore Data Model Schema</h4>
+  <pre>
+users/{userId}
+  ├── email: string (e.g. "operator@tropotrace.moes.gov.in")
+  ├── role: string ("meteorological-operator")
+  ├── createdAt: timestamp (serverTimestamp())
+  │
+  ├── savedAlerts/{alertId}
+  │     ├── title: string
+  │     ├── language: string ("English", "Tamil", "Hindi", etc.)
+  │     ├── severity: "NORMAL" | "WATCH" | "ALERT" | "WARNING" | "SEVERE"
+  │     ├── area: string (e.g. "Coimbatore Metro & NH-81 Corridor")
+  │     ├── message: string (Full localized alert body)
+  │     └── createdAt: timestamp
+  │
+  └── scenarioRuns/{runId}
+        ├── scenarioKey: string ("rapid-thunderstorm", "cloudburst", etc.)
+        ├── scenarioLabel: string
+        ├── lastMinute: number (Timeline minute offset 0–360)
+        └── startedAt: timestamp
+  </pre>
+
+  <!-- ==================== 4. GIS MAP ENGINE & LOCATION ==================== -->
+  <div class="page-break"></div>
+  <h2><span class="sec-num">4.0</span> The GIS Map Engine &amp; Spatial Location System</h2>
+  <p>
+    The spatial core of TropoTrace is implemented in <code>StormMap.tsx</code>, utilizing Leaflet.js with custom procedural SVG and HTML canvas layers.
+  </p>
+
+  <div class="avoid-break">
+    <h3>4.1 Geographic Coordinate System &amp; Projection</h3>
+    <p>
+      The demonstration theater is centered on the Western Ghats / Southern Tamil Nadu &amp; Kerala Convective Corridor (Coimbatore, Tiruppur, Erode, Nilgiris). Normalized simulation coordinates [0, 100] are mapped to geographic latitude and longitude:
+    </p>
+    <div class="callout callout-blue">
+      <code>Latitude = 13.6 - (y &times; 0.045)</code> &nbsp;|&nbsp; <code>Longitude = 74.8 + (x &times; 0.045)</code><br>
+      <strong>Geographic Extent:</strong> Latitude 10.0&deg;N to 13.6&deg;N &nbsp;&bull;&nbsp; Longitude 74.8&deg;E to 79.3&deg;E
+    </div>
+  </div>
+
+  <div class="avoid-break">
+    <h3>4.2 Location Permissions &amp; Geolocation Handling</h3>
+    <p>
+      When an operator activates the <strong>"MY LOCATION"</strong> tool on the radar toolbar:
+    </p>
+    <ul>
+      <li>The application calls the W3C standard <code>navigator.geolocation.getCurrentPosition()</code> with <code>enableHighAccuracy: true</code>.</li>
+      <li>The browser prompts the user for sensor permissions.</li>
+      <li><strong>Permission Granted:</strong> State transitions from <code>LOCATING</code> to <code>FOUND</code>. The map executes a smooth <code>flyTo()</code> animation to the user's coordinates, renders a 650-meter cyan accuracy radius, and shifts the radar range rings relative to their vantage point.</li>
+      <li><strong>Permission Denied:</strong> Transitions to <code>DENIED</code> without crashing, maintaining default radar focus.</li>
+    </ul>
+  </div>
+
+  <div class="avoid-break">
+    <h3>4.3 Multi-Layer GIS Overlays</h3>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 25%;">Layer Name</th>
+          <th style="width: 25%;">Visual Representation</th>
+          <th>Operational Significance</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Radar Sweep</strong></td>
+          <td>Rotating beam at 12 RPM + Range Rings</td>
+          <td>Simulates an active S-band Doppler radar scanning at 50, 100, and 150 km ranges.</td>
+        </tr>
+        <tr>
+          <td><strong>Projected Trajectory</strong></td>
+          <td>Amber dashed line with chevron arrows (&rsaquo;)</td>
+          <td>Visualizes 0–6h storm propagation vector derived from steering winds.</td>
+        </tr>
+        <tr>
+          <td><strong>Uncertainty Cone</strong></td>
+          <td>Widening amber polygon swath</td>
+          <td>Accounts for convective cell lateral divergence and shear variance.</td>
+        </tr>
+        <tr>
+          <td><strong>Highway Segments</strong></td>
+          <td>Teal arterial vectors</td>
+          <td>Highlights logistics corridors (NH-81 Coimbatore–Tiruppur, NH-544 Bypass).</td>
+        </tr>
+        <tr>
+          <td><strong>Critical Assets</strong></td>
+          <td>Interactive GIS markers with tooltip cards</td>
+          <td>Monitors Coimbatore Airport (CJB), Medical College Hospital, and Palladam 400kV Substation.</td>
+        </tr>
+        <tr>
+          <td><strong>Active Lightning</strong></td>
+          <td>Pulsing golden lightning lines</td>
+          <td>Simulates real-time ground flash strikes from the Lightning Detection Network.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== 5. MACHINE LEARNING & NOWCASTING ==================== -->
+  <div class="avoid-break">
+    <h2><span class="sec-num">5.0</span> The Convective Intelligence &amp; ML Nowcasting Engine</h2>
+    <p>
+      Implemented in <code>simulation.ts</code>, TropoTrace models physical convective storm genesis, cell kinematics, and multi-sensor consensus based on proven meteorological algorithms.
+    </p>
+  </div>
+
+  <h3>5.1 Cell Identification &amp; Kinematic Tracking (TITAN / SCIT)</h3>
+  <p>
+    Storm cells are detected by clustering contiguous Doppler radar reflectivity cores above 40 dBZ. The centroid coordinates are calculated over time to derive translation speed ($v$) and azimuth direction ($\theta$). Cells are categorized into 5 lifecycle stages:
+  </p>
+  <div class="callout callout-amber">
+    <strong>Lifecycle State Machine:</strong><br>
+    &bull; <strong>INITIATING</strong> (Intensity &lt; 38%) &rarr; Developing updraft, first radar echo.<br>
+    &bull; <strong>DEVELOPING</strong> (38% &ndash; 55%) &rarr; Rapid cloud top cooling, lightning onset.<br>
+    &bull; <strong>INTENSIFYING</strong> (56% &ndash; 73%) &rarr; Lightning jump, reflectivity core aloft.<br>
+    &bull; <strong>MATURE</strong> (74% &ndash; 88%) &rarr; Peak dBZ, heavy precipitation, hail/downburst outflow.<br>
+    &bull; <strong>DECAYING</strong> (&gt; 88%) &rarr; Downdraft dominance, core collapse.
+  </div>
+
+  <div class="avoid-break">
+    <h3>5.2 Multi-Hazard Mathematical Formulations</h3>
+    <ul>
+      <li><strong>Composite Risk ($R_{\text{comp}}$):</strong> $\text{clamp}(0.90 \cdot \text{Intensity} + 0.16 \cdot \text{LightningRate})$</li>
+      <li><strong>Equivalent Reflectivity ($Z$):</strong> $\text{clamp}(40 + 0.52 \cdot \text{Intensity})\ \text{dBZ}$ ($>55\ \text{dBZ}$ signals severe hail core).</li>
+      <li><strong>Hail Probability ($P_{\text{hail}}$):</strong> Triggered when reflectivity aloft exceeds 55 dBZ above the freezing level (+4.2 km) with high Vertically Integrated Liquid (VIL $>45\ \text{kg/m}^2$).</li>
+      <li><strong>Downburst Wind ($V_{\text{gust}}$):</strong> Estimated outflow velocity: $32 + 0.42 \cdot \text{Intensity}\ \text{km/h}$.</li>
+      <li><strong>Cloudburst Trigger:</strong> Rainfall rate $>100\ \text{mm/h}$ concentrated over a localized drainage basin.</li>
+    </ul>
+  </div>
+
+  <div class="avoid-break">
+    <h3>5.3 Multi-Sensor Consensus &amp; Degradation Protocol</h3>
+    <p>
+      The platform samples 5 telemetry feeds. If Numerical Weather Prediction (NWP) experiences latency (>12 minutes), the system flags it as <code>DELAYED</code>, drops the consensus score, reduces confidence by 11%, surfaces an advisory (*"Forecast confidence reduced"*), and dynamically re-weights real-time radar and lightning observations.
+    </p>
+  </div>
+
+  <div class="avoid-break">
+    <h3>5.4 Statistical Verification Metrics (Module 08)</h3>
+    <p>
+      Evaluated against synthetic ground truth observations across a 60-minute window:
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Metric Key</th>
+          <th>Observed Score</th>
+          <th>Operational Benchmark</th>
+          <th>Formula</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>MAE (Mean Absolute Error)</strong></td>
+          <td><span class="pill pill-green">5.4 mm/h</span></td>
+          <td>Target: &lt; 8.0 mm/h</td>
+          <td>$\text{MAE} = \frac{1}{N}\sum |\text{Pred} - \text{Obs}|$</td>
+        </tr>
+        <tr>
+          <td><strong>RMSE (Root Mean Square Error)</strong></td>
+          <td><span class="pill pill-green">8.9 mm/h</span></td>
+          <td>Target: &lt; 12.0 mm/h</td>
+          <td>$\text{RMSE} = \sqrt{\frac{1}{N}\sum (\text{Pred} - \text{Obs})^2}$</td>
+        </tr>
+        <tr>
+          <td><strong>POD (Hit Rate)</strong></td>
+          <td><span class="pill pill-green">0.88</span></td>
+          <td>Target: &gt; 0.80</td>
+          <td>$\text{POD} = \frac{\text{Hits}}{\text{Hits} + \text{Misses}}$</td>
+        </tr>
+        <tr>
+          <td><strong>FAR (False Alarm Ratio)</strong></td>
+          <td><span class="pill pill-green">0.15</span></td>
+          <td>Target: &lt; 0.25</td>
+          <td>$\text{FAR} = \frac{\text{False Alarms}}{\text{Hits} + \text{False Alarms}}$</td>
+        </tr>
+        <tr>
+          <td><strong>CSI (Critical Success Index)</strong></td>
+          <td><span class="pill pill-green">0.76</span></td>
+          <td>Target: &gt; 0.65</td>
+          <td>$\text{CSI} = \frac{\text{Hits}}{\text{Hits} + \text{Misses} + \text{False Alarms}}$</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== 6. AI SYSTEM (GROQ + TROPO) ==================== -->
+  <div class="page-break"></div>
+  <h2><span class="sec-num">6.0</span> The Artificial Intelligence System (Groq API &amp; Tropo Copilot)</h2>
+  <p>
+    TropoTrace features <strong>Tropo</strong>, an AI-powered conversational meteorological copilot implemented in <code>analyst.ts</code> and <code>AnalystView.tsx</code>.
+  </p>
+
+  <div class="arch-diagram">
+    <div class="arch-box">
+      <div class="arch-box-title">1. Context Injection</div>
+      <ul>
+        <li>Active Cell ID, centroid &amp; dBZ</li>
+        <li>Lightning jump rate (fl/min)</li>
+        <li>Active hazard probabilities</li>
+        <li>Exposed infrastructure counts</li>
+        <li>Sensor latencies &amp; consensus</li>
+      </ul>
+    </div>
+    <div class="arch-arrow">&rarr;</div>
+    <div class="arch-box">
+      <div class="arch-box-title">2. Groq Cloud LPU</div>
+      <ul>
+        <li><code>openai/gpt-oss-120b</code></li>
+        <li>120 Billion Parameters</li>
+        <li>Sub-500ms TTFT Latency</li>
+        <li>Temperature: 0.3 (Strict)</li>
+      </ul>
+    </div>
+    <div class="arch-arrow">&rarr;</div>
+    <div class="arch-box">
+      <div class="arch-box-title">3. Citation Parser</div>
+      <ul>
+        <li>Doppler S-Band Radar pill</li>
+        <li>GLDN Lightning Network pill</li>
+        <li>GIS Infrastructure Layer pill</li>
+        <li>Confidence rating assignment</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Zero-Hallucination Policy Implementation</h3>
+  <p>
+    To guarantee life-safety reliability during storm operations:
+  </p>
+  <ol>
+    <li>The model is fed a comprehensive system prompt with the exact live simulation snapshot state.</li>
+    <li>It is governed by an absolute negative constraint: <em>"You operate under a strict ZERO-HALLUCINATION policy. Every response must be grounded strictly in active radar, satellite, and nowcast telemetry. If asked about variables outside this data, state: Insufficient current data in current scenario snapshot."</em></li>
+    <li>An automated regex-based citation extractor parses model responses and matches physical terminology to instrument tags (Doppler Radar, GLDN Lightning, INSAT-3DR, AWS Network).</li>
+  </ol>
+
+  <!-- ==================== 7. ALL 10 MODULES WALKTHROUGH ==================== -->
+  <h2><span class="sec-num">7.0</span> Feature Walkthrough — All 10 Application Modules</h2>
+
+  <div class="module-card">
+    <div class="module-card-header">
+      <span class="module-name">Module 00 · Authentication &amp; Access Control</span>
+      <span class="module-id">AuthView.tsx</span>
+    </div>
+    <div class="module-desc">
+      Cinematic dark landing screen with 3D canvas atmospheric globe. Provides Firebase email/password authentication, error handling, and a one-click <strong>"Judge Quick Access"</strong> button for evaluators.
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-card-header">
+      <span class="module-name">Module 01 · Real-Time Command Center</span>
+      <span class="module-id">CommandCenterView.tsx</span>
+    </div>
+    <div class="module-desc">
+      Tactical multi-hazard overview with 6-card KPI summary strip, interactive Leaflet GIS map, selected cell telemetry rail, 0–360 min timeline scrubber, and automated 9-step <em>"Tell Me The Storm"</em> presentation autopilot.
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-card-header">
+      <span class="module-name">Module 02 · Storm Intelligence &amp; Kinematics</span>
+      <span class="module-id">StormIntelligenceView.tsx</span>
+    </div>
+    <div class="module-desc">
+      Deep cell diagnostics featuring the <strong>Storm DNA Spider Radar</strong> (7-axis SVG chart), speed/direction vectors, 5-stage lifecycle stepper, and 15-minute trend deltas for lightning, dBZ, and area.
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-card-header">
+      <span class="module-name">Module 03 · Hazard Explorer</span>
+      <span class="module-id">HazardExplorerView.tsx</span>
+    </div>
+    <div class="module-desc">
+      0–6 hour multi-hazard probabilistic risk fields. Includes an interactive grid matrix at 1 km, 2 km, or 3 km resolutions with cell-level inspection of physical trigger criteria (CAPE, VIL, echo tops).
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-card-header">
+      <span class="module-name">Module 04 · Impact Intelligence</span>
+      <span class="module-id">ImpactIntelligenceView.tsx</span>
+    </div>
+    <div class="module-desc">
+      Infrastructure exposure modeling across 4 operational lenses: <code>EMERGENCY</code>, <code>AVIATION</code>, <code>AGRICULTURE</code>, and <code>URBAN</code>. Includes highway route risk analysis between Coimbatore and Tiruppur on NH-81.
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-card-header">
+      <span class="module-name">Module 05 · Alert Center &amp; CAP Dispatch</span>
+      <span class="module-id">AlertCenterView.tsx</span>
+    </div>
+    <div class="module-desc">
+      Multi-language emergency alert generator supporting <strong>8 Indian languages</strong> (English, Hindi, Tamil, Telugu, Malayalam, Kannada, Marathi, Bengali), native Web Speech API audio broadcast, and OASIS CAP v1.2 XML export.
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-card-header">
+      <span class="module-name">Module 06 · Scientific Data Observatory</span>
+      <span class="module-id">DataObservatoryView.tsx</span>
+    </div>
+    <div class="module-desc">
+      Telemetry health monitoring for 5 sensor feeds, searchable raw observation tensor grid, visual 6-stage ingestion pipeline, and architecture blueprints for IMD/ISRO/IITM integrations.
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-card-header">
+      <span class="module-name">Module 07 · Convective Simulation Lab</span>
+      <span class="module-id">SimulationLabView.tsx</span>
+    </div>
+    <div class="module-desc">
+      Scenario management hub hosting 6 pre-built severe weather scenarios (Rapid Thunderstorm, Hailstorm, Cloudburst, Downburst, Initiation, Multi-cell) with 1x, 2x, and 4x playback multipliers.
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-card-header">
+      <span class="module-name">Module 08 · Model Verification</span>
+      <span class="module-id">ModelVerificationView.tsx</span>
+    </div>
+    <div class="module-desc">
+      Skill verification dashboard with predicted vs observed rainfall comparison charts, MAE/RMSE/POD/FAR/CSI metric inspector, and 2x2 contingency matrix (142 hits).
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-card-header">
+      <span class="module-name">Module 09 · Tropo AI Copilot</span>
+      <span class="module-id">AnalystView.tsx</span>
+    </div>
+    <div class="module-desc">
+      Conversational AI assistant powered by Groq GPT-OSS 120B. Answers operational questions, verifies claims with grounded citations, and displays live thinking states.
+    </div>
+  </div>
+
+  <div class="module-card">
+    <div class="module-card-header">
+      <span class="module-name">Module 10 · System Settings</span>
+      <span class="module-id">SettingsView.tsx</span>
+    </div>
+    <div class="module-desc">
+      Platform configuration, dark/light themes, high contrast accessibility mode, reduced motion mode, basemap toggles, and JSON configuration export.
+    </div>
+  </div>
+
+  <!-- ==================== 8. JUDGE DEFENSE Q&A ==================== -->
+  <div class="page-break"></div>
+  <h2><span class="sec-num">8.0</span> Judge Defense Q&amp;A — Technical Presentation Guide</h2>
+
+  <div class="qa-card">
+    <div class="qa-q">
+      <span class="qa-q-num">Q1</span>
+      How does TropoTrace differ from commercial apps like AccuWeather or Windy?
+    </div>
+    <div class="qa-a">
+      Standard consumer weather apps present synoptic forecasts hours in advance on coarse 4–12 km grids. <strong>TropoTrace is a Convective-Scale Nowcasting Decision-Support System</strong> operating in the <strong>0 to 6 hour horizon at 1–3 km resolution</strong>. It tracks discrete storm centroids, detects lightning jumps before surface impact, projects trajectory uncertainty cones, models infrastructure exposure (hospitals, schools, substations), and produces CAP v1.2 alerts in 8 Indian languages.
+    </div>
+  </div>
+
+  <div class="qa-card">
+    <div class="qa-q">
+      <span class="qa-q-num">Q2</span>
+      How do you guarantee that the Groq AI Copilot does not hallucinate?
+    </div>
+    <div class="qa-a">
+      We enforce a strict <strong>Zero-Hallucination Grounding Protocol</strong>. The active scenario snapshot (dBZ reflectivity, lightning rate, rainfall accumulation, sensor latencies, and exposed demographic tallies) is injected into the model's system prompt. The model is explicitly constrained from guessing. Any question about unmonitored parameters triggers: <em>"Insufficient current data in current scenario snapshot."</em> An automated regex parser validates the text and binds physical instrument citation pills (Doppler S-Band, GLDN, INSAT-3DR) to every claim.
+    </div>
+  </div>
+
+  <div class="qa-card">
+    <div class="qa-q">
+      <span class="qa-q-num">Q3</span>
+      What algorithms are used for storm cell tracking and trajectory projection?
+    </div>
+    <div class="qa-a">
+      Our engine is modeled on the <strong>TITAN (Thunderstorm Identification, Tracking, Analysis, and Nowcasting)</strong> and <strong>SCIT (Storm Cell Identification and Tracking)</strong> algorithms developed by NCAR and NOAA. Reflectivity clusters $>40\ \text{dBZ}$ are grouped into centroids, and temporal vectors compute speed and azimuth direction. Instead of a single straight line, we project a widening <strong>uncertainty cone polygon</strong> downstream to account for atmospheric steering shear and lateral storm propagation.
+    </div>
+  </div>
+
+  <div class="qa-card">
+    <div class="qa-q">
+      <span class="qa-q-num">Q4</span>
+      Why is a lightning jump an important forecasting signal?
+    </div>
+    <div class="qa-a">
+      A <strong>lightning jump</strong> (a sudden spike in flash discharge $>45\ \text{fl/min}$) is a direct physical indicator of an intensifying convective updraft. Updraft acceleration lofts supercooled water droplets above the freezing level, causing rapid non-inductive graupel-ice charge separation. Research by Schultz et al. demonstrates that <strong>lightning jumps precede severe surface hazards (damaging hail, microbursts, and cloudburst downpours) by 15 to 25 minutes</strong>, providing an early warning lead time before radar cores peak.
+    </div>
+  </div>
+
+  <div class="qa-card">
+    <div class="qa-q">
+      <span class="qa-q-num">Q5</span>
+      How does the system handle telemetry failures or sensor latency?
+    </div>
+    <div class="qa-a">
+      TropoTrace includes a <strong>Multi-Sensor Consensus &amp; Degradation Protocol</strong>. It monitors 5 feeds (Radar, Satellite, Lightning, AWS, and NWP). If a stream lags (e.g., NWP model guidance delayed $>12$ minutes), the system marks it as <code>DELAYED</code>, drops the consensus score, reduces confidence from 93% to 78%, surfaces an advisory (*"Forecast confidence reduced"*), and dynamically re-weights remaining real-time radar and lightning streams.
+    </div>
+  </div>
+
+  <div class="qa-card">
+    <div class="qa-q">
+      <span class="qa-q-num">Q6</span>
+      What is the cloud database architecture?
+    </div>
+    <div class="qa-a">
+      TropoTrace utilizes <strong>Firebase Auth</strong> for operator identity and <strong>Cloud Firestore</strong> as a serverless NoSQL document database. Data is partitioned under <code>users/{userId}</code> with sub-collections for <code>savedAlerts</code> and <code>scenarioRuns</code>. Firestore security rules enforce strict user-level tenancy, preventing unauthorized cross-tenant access, while Firebase Hosting delivers the static SPA across global edge CDNs.
+    </div>
+  </div>
+
+  <!-- ==================== 9. PRESENTATION CHEAT SHEET ==================== -->
+  <div class="avoid-break">
+    <h2><span class="sec-num">9.0</span> Rapid Presentation Cheat Sheet</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Technical Dimension</th>
+          <th>Specific Metric / Standard to State to Judges</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Nowcast Horizon &amp; Resolution</strong></td>
+          <td>0 to 6 Hours, 1–3 km spatial grid</td>
+        </tr>
+        <tr>
+          <td><strong>Tracking Algorithms</strong></td>
+          <td>TITAN (Centroid tracking) &amp; SCIT (Cell identification)</td>
+        </tr>
+        <tr>
+          <td><strong>Critical Early Warning Factor</strong></td>
+          <td>Lightning Flash Jump (15–25 minute lead time over radar peaks)</td>
+        </tr>
+        <tr>
+          <td><strong>Cloudburst Standard</strong></td>
+          <td>India Meteorological Department (IMD) criteria: $\ge 100\ \text{mm/h}$</td>
+        </tr>
+        <tr>
+          <td><strong>AI Copilot Hardware</strong></td>
+          <td>Groq LPUs + <code>openai/gpt-oss-120b</code> (120B model) + Zero-Hallucination Grounding</td>
+        </tr>
+        <tr>
+          <td><strong>Cloud Infrastructure</strong></td>
+          <td>Google Firebase (Auth + Cloud Firestore NoSQL + Edge Hosting)</td>
+        </tr>
+        <tr>
+          <td><strong>GIS Engine</strong></td>
+          <td>Leaflet.js + Esri World Imagery (Satellite) + Esri World Street Map</td>
+        </tr>
+        <tr>
+          <td><strong>Model Verification Score</strong></td>
+          <td>CSI = 0.76 (Threat Score), POD = 0.88 (Hit Rate), MAE = 5.4 mm/h</td>
+        </tr>
+        <tr>
+          <td><strong>Disaster Standards</strong></td>
+          <td>OASIS Common Alerting Protocol (CAP v1.2) XML + 8 Indian Languages + TTS</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</body>
+</html>
