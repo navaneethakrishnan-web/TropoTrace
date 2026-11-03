@@ -14,8 +14,18 @@ import type {
 } from '../domain/types'
 import { fetchLiveWeather, getWeatherRateLimitStatus, type LiveWeatherData } from '../services/weatherService'
 import type { RateLimitStatus } from '../services/rateLimiter'
+import { checkRealTimeHazardInRadius, type HazardCheckResult } from '../domain/hazardDetection'
 
 export type Phenomenon = 'ALL' | 'LIGHTNING' | 'HAIL' | 'CLOUDBURST' | 'DOWNBURST'
+
+export interface DetectionModalState {
+  type: 'LOCATION_REQUIRED' | 'NO_HAZARD_DETECTED' | 'HAZARD_DETECTED'
+  phenomenon: Phenomenon
+  title: string
+  message: string
+  metrics?: HazardCheckResult['metrics']
+  coordinates?: [number, number] | null
+}
 
 export const routeByView: Record<ViewId, string> = {
   command: '/',
@@ -81,6 +91,14 @@ interface AppContextType {
   liveWeather: LiveWeatherData | null
   refreshLiveWeather: () => Promise<void>
   rateLimitStatus: RateLimitStatus
+  userLocation: [number, number] | null
+  locationStatus: 'IDLE' | 'LOCATING' | 'FOUND' | 'DENIED'
+  requestLocation: () => Promise<[number, number] | null>
+  clearLocation: () => void
+  realTimeDetectionModal: DetectionModalState | null
+  setRealTimeDetectionModal: (modal: DetectionModalState | null) => void
+  handlePhenomenonSelect: (p: Phenomenon) => Promise<void>
+  isHazardDetectedInRadius: (p: Phenomenon) => boolean
 }
 
 const AppContext = createContext<AppContextType | null>(null)
@@ -105,9 +123,49 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [liveWeather, setLiveWeather] = useState<LiveWeatherData | null>(null)
   const [rateLimitStatus, setRateLimitStatus] = useState<RateLimitStatus>(() => getWeatherRateLimitStatus())
 
+  // Device Geolocation & 3 km Surveillance Zone State
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
+  const [locationStatus, setLocationStatus] = useState<'IDLE' | 'LOCATING' | 'FOUND' | 'DENIED'>('IDLE')
+  const [realTimeDetectionModal, setRealTimeDetectionModal] = useState<DetectionModalState | null>(null)
+
+  const requestLocation = async (): Promise<[number, number] | null> => {
+    if (!navigator.geolocation) {
+      setLocationStatus('DENIED')
+      return null
+    }
+    setLocationStatus('LOCATING')
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        async ({ coords }) => {
+          const next: [number, number] = [coords.latitude, coords.longitude]
+          setUserLocation(next)
+          setLocationStatus('FOUND')
+          try {
+            const weather = await fetchLiveWeather({ lat: next[0], lon: next[1] })
+            setLiveWeather(weather)
+            setRateLimitStatus(getWeatherRateLimitStatus())
+          } catch (_) {}
+          resolve(next)
+        },
+        () => {
+          setLocationStatus('DENIED')
+          resolve(null)
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      )
+    })
+  }
+
+  const clearLocation = () => {
+    setUserLocation(null)
+    setLocationStatus('IDLE')
+  }
+
   const refreshLiveWeather = async () => {
     try {
-      const data = await fetchLiveWeather()
+      const data = await fetchLiveWeather(
+        userLocation ? { lat: userLocation[0], lon: userLocation[1] } : undefined
+      )
       setLiveWeather(data)
       setRateLimitStatus(getWeatherRateLimitStatus())
     } catch (err) {
@@ -116,7 +174,65 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
   const toggleDataStreamMode = () => {
-    setDataStreamMode((prev) => (prev === 'SYNTHETIC' ? 'REAL_TIME' : 'SYNTHETIC'))
+    setDataStreamMode((prev) => {
+      const next = prev === 'SYNTHETIC' ? 'REAL_TIME' : 'SYNTHETIC'
+      if (next === 'SYNTHETIC') {
+        setRealTimeDetectionModal(null)
+      } else {
+        refreshLiveWeather()
+      }
+      return next
+    })
+  }
+
+  const isHazardDetectedInRadius = (p: Phenomenon): boolean => {
+    if (dataStreamMode === 'SYNTHETIC') return true
+    const check = checkRealTimeHazardInRadius(p, liveWeather, snapshot)
+    return check.detected
+  }
+
+  const handlePhenomenonSelect = async (p: Phenomenon) => {
+    if (dataStreamMode === 'SYNTHETIC') {
+      setPhenomenon(p)
+      setRealTimeDetectionModal(null)
+      return
+    }
+
+    // REAL_TIME MODE: 1. Check if location is enabled
+    if (locationStatus !== 'FOUND' || !userLocation) {
+      setRealTimeDetectionModal({
+        type: 'LOCATION_REQUIRED',
+        phenomenon: p,
+        title: `Turn on your location to detect ${p.toLowerCase()}`,
+        message: `In Real Data Mode, TropoTrace scans Doppler radar, ground AWS, and lightning sensor telemetry within your 3 km operational radius. Turn on your location to detect ${p.toLowerCase()} in real time.`,
+        coordinates: null,
+      })
+      return
+    }
+
+    // 2. Location is enabled: Evaluate real-time hazard within 3 km radius
+    const check = checkRealTimeHazardInRadius(p, liveWeather, snapshot)
+    if (check.detected) {
+      setPhenomenon(p)
+      setRealTimeDetectionModal({
+        type: 'HAZARD_DETECTED',
+        phenomenon: p,
+        title: `Real ${p} Activity Detected in 3 km Radius`,
+        message: check.reason,
+        metrics: check.metrics,
+        coordinates: userLocation,
+      })
+    } else {
+      // In real-time mode with calm weather, do NOT activate fake animation
+      setRealTimeDetectionModal({
+        type: 'NO_HAZARD_DETECTED',
+        phenomenon: p,
+        title: `No ${p.toLowerCase()} detected in your location radius`,
+        message: `No ${p.toLowerCase()} activity detected within your 3 kilometer radius around coordinates ${userLocation[0].toFixed(4)}°N, ${userLocation[1].toFixed(4)}°E.`,
+        metrics: check.metrics,
+        coordinates: userLocation,
+      })
+    }
   }
 
   // Initial and periodic weather polling with client-side rate limiting
@@ -341,6 +457,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     liveWeather,
     refreshLiveWeather,
     rateLimitStatus,
+    userLocation,
+    locationStatus,
+    requestLocation,
+    clearLocation,
+    realTimeDetectionModal,
+    setRealTimeDetectionModal,
+    handlePhenomenonSelect,
+    isHazardDetectedInRadius,
   }
 
   return <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>

@@ -44,6 +44,8 @@ export function CommandCenterView() {
     setMode,
     phenomenon,
     setPhenomenon,
+    handlePhenomenonSelect,
+    dataStreamMode,
     investigateStorm,
     navigate,
     runScenario,
@@ -239,7 +241,7 @@ export function CommandCenterView() {
                   <button
                     key={item.id}
                     className={`${item.className} ${phenomenon === item.id ? 'active' : ''}`}
-                    onClick={() => setPhenomenon(item.id)}
+                    onClick={() => handlePhenomenonSelect(item.id)}
                   >
                     {item.label}
                   </button>

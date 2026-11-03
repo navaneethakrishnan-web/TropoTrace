@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { Header } from '../components/Header'
 import { Sidebar } from '../components/Sidebar'
+import { RealTimeDetectionModal } from '../components/RealTimeDetectionModal'
 import { AppProvider, useApp } from '../context/AppContext'
 import { AlertCenterView } from '../views/AlertCenterView'
 import { AnalystView } from '../views/AnalystView'
@@ -99,6 +100,9 @@ function AppShell() {
           {activeView === 'analyst' && <AnalystView />}
           {activeView === 'settings' && <SettingsView />}
         </div>
+
+        {/* Real-Time Convective Hazard Detection & Location Modal */}
+        <RealTimeDetectionModal />
       </main>
 
       {/* Mobile-Native Bottom Navigation Bar (Screens <= 768px) */}

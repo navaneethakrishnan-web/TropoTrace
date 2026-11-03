@@ -6,6 +6,7 @@ import {
   MapPin,
   Navigation,
   RotateCcw,
+  X,
   ZoomIn,
   ZoomOut,
 } from 'lucide-react'
@@ -27,6 +28,12 @@ export function StormMap({ showImpactCorridor = false, highlightHazard = false, 
     setSelectedCellId,
     investigateStorm,
     settings,
+    userLocation,
+    locationStatus,
+    requestLocation,
+    clearLocation,
+    dataStreamMode,
+    isHazardDetectedInRadius,
   } = useApp()
 
   const mapHostRef = useRef<HTMLDivElement | null>(null)
@@ -44,9 +51,6 @@ export function StormMap({ showImpactCorridor = false, highlightHazard = false, 
     roads: true,
   })
 
-  const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
-  const [locationStatus, setLocationStatus] = useState<'IDLE' | 'LOCATING' | 'FOUND' | 'DENIED'>('IDLE')
-
   const activeCell = snapshot.cells.find((c) => c.id === selectedCellId) ?? snapshot.cells[0]
 
   // Convert normalized scenario coordinate to geographic latitude/longitude in South India
@@ -59,24 +63,12 @@ export function StormMap({ showImpactCorridor = false, highlightHazard = false, 
     setLayers((prev) => ({ ...prev, [key]: !prev[key] }))
   }
 
-  // Geolocation handler
-  const requestLocation = () => {
-    if (!navigator.geolocation) {
-      setLocationStatus('DENIED')
-      return
+  // Auto-center when user location is acquired
+  useEffect(() => {
+    if (userLocation && mapRef.current) {
+      mapRef.current.flyTo(userLocation, 10, { duration: 1.2 })
     }
-    setLocationStatus('LOCATING')
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        const next: [number, number] = [coords.latitude, coords.longitude]
-        setUserLocation(next)
-        setLocationStatus('FOUND')
-        mapRef.current?.flyTo(next, 10, { duration: 1.2 })
-      },
-      () => setLocationStatus('DENIED'),
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-    )
-  }
+  }, [userLocation])
 
   // Initialize Map
   useEffect(() => {
@@ -347,31 +339,57 @@ export function StormMap({ showImpactCorridor = false, highlightHazard = false, 
       }).addTo(overlay)
     }
 
-    // 6. User Current Location Ring & Pulsing 3D Pin
+    // 6. User Current Location Ring & 3 KM Operational Surveillance Radius
     if (userLocation) {
+      // 3 KM Operational Surveillance Radius Circle
+      L.circle(userLocation, {
+        radius: 3000,
+        color: '#38e4c0',
+        weight: 2,
+        dashArray: '6 8',
+        opacity: 0.85,
+        fillColor: '#38e4c0',
+        fillOpacity: 0.08,
+        className: 'user-3km-surveillance-zone',
+      }).addTo(overlay)
+
+      // Inner proximity ring
       L.circle(userLocation, {
         radius: 650,
         color: '#65f2d2',
-        weight: 2,
+        weight: 1.5,
         opacity: 0.85,
         fillColor: '#65f2d2',
-        fillOpacity: 0.12,
+        fillOpacity: 0.14,
         className: 'user-location-ring',
       }).addTo(overlay)
 
       L.marker(userLocation, {
         icon: cssIcon('user-location-marker', '<span>⌖</span>'),
       })
-        .bindTooltip('<b>YOUR CURRENT LOCATION</b>', { direction: 'top', className: 'gis-custom-tooltip' })
+        .bindTooltip(
+          `<b>YOUR LOCATION (3 KM NOWCAST CELL)</b><br/>Lat: ${userLocation[0].toFixed(4)}°, Lon: ${userLocation[1].toFixed(4)}°`,
+          { direction: 'top', className: 'gis-custom-tooltip' }
+        )
         .addTo(overlay)
     }
 
+    // Determine whether phenomenon animations should be rendered:
+    // In SYNTHETIC mode: always render simulated phenomenon animations.
+    // In REAL_TIME mode: ONLY render if hazard is actively detected in the 3 km radius!
+    const shouldRenderPhenomenon =
+      dataStreamMode === 'SYNTHETIC' ||
+      (dataStreamMode === 'REAL_TIME' && userLocation && isHazardDetectedInRadius(phenomenon))
+
+    // Animation epicenter: in real-time mode with userLocation, render inside user's 3 km zone
+    const animCenter = (dataStreamMode === 'REAL_TIME' && userLocation) ? userLocation : center
+
     // 7. Active 3D Gold Energy Lightning Strokes
-    if (layers.lightning && (phenomenon === 'ALL' || phenomenon === 'LIGHTNING')) {
+    if (shouldRenderPhenomenon && layers.lightning && (phenomenon === 'ALL' || phenomenon === 'LIGHTNING')) {
       Array.from({ length: 4 }, (_, index) => {
         const angle = index * (Math.PI / 2)
-        const lat = center[0] + Math.sin(angle) * 0.018
-        const lng = center[1] + Math.cos(angle) * 0.022
+        const lat = animCenter[0] + Math.sin(angle) * 0.018
+        const lng = animCenter[1] + Math.cos(angle) * 0.022
         return L.marker([lat, lng], {
           icon: cssIcon(
             'lightning-marker',
@@ -382,28 +400,28 @@ export function StormMap({ showImpactCorridor = false, highlightHazard = false, 
     }
 
     // 8. Phenomenon-Specific 3D Indicators (Hail, Cloudburst, Downburst)
-    if (phenomenon === 'HAIL') {
+    if (shouldRenderPhenomenon && phenomenon === 'HAIL') {
       Array.from({ length: 24 }, (_, index) =>
         L.marker(
           [
-            center[0] + 0.03 - (index % 6) * 0.01,
-            center[1] - 0.025 + Math.floor(index / 6) * 0.011,
+            animCenter[0] + 0.03 - (index % 6) * 0.01,
+            animCenter[1] - 0.025 + Math.floor(index / 6) * 0.011,
           ],
           {
             icon: cssIcon('hail-marker', '<span class="hail-glyph">●</span>'),
           }
         ).addTo(overlay)
       )
-    } else if (phenomenon === 'CLOUDBURST') {
-      L.marker(center, {
+    } else if (shouldRenderPhenomenon && phenomenon === 'CLOUDBURST') {
+      L.marker(animCenter, {
         icon: cssIcon('cloudburst-marker', '<span class="cloudburst-glyph">☔</span>'),
       }).addTo(overlay)
-    } else if (phenomenon === 'DOWNBURST') {
+    } else if (shouldRenderPhenomenon && phenomenon === 'DOWNBURST') {
       Array.from({ length: 8 }, (_, index) =>
         L.marker(
           [
-            center[0] + Math.sin(index) * 0.018,
-            center[1] + Math.cos(index) * 0.025,
+            animCenter[0] + Math.sin(index) * 0.018,
+            animCenter[1] + Math.cos(index) * 0.025,
           ],
           {
             icon: cssIcon('downburst-marker', '<span class="downburst-glyph">↘</span>'),
@@ -491,20 +509,38 @@ export function StormMap({ showImpactCorridor = false, highlightHazard = false, 
         </div>
 
         <div className="toolbar-right">
-          <button
-            className={`location-btn ${locationStatus === 'FOUND' ? 'active' : ''}`}
-            onClick={requestLocation}
-            title="Locate my position on the storm radar"
-          >
-            <Navigation size={12} />
-            <span>
-              {locationStatus === 'LOCATING'
-                ? 'LOCATING…'
-                : locationStatus === 'FOUND'
-                ? 'LOCATION LOCKED'
-                : 'MY LOCATION'}
-            </span>
-          </button>
+          {locationStatus === 'FOUND' && userLocation ? (
+            <div className="location-btn-cluster">
+              <button
+                className="location-btn active"
+                onClick={() => mapRef.current?.flyTo(userLocation, 11, { duration: 1.0 })}
+                title="Focus on my 3 km surveillance radius"
+              >
+                <Navigation size={12} />
+                <span>LOCATION LOCKED (3 KM)</span>
+              </button>
+              <button
+                className="location-off-btn"
+                onClick={clearLocation}
+                title="Turn off device location to test location prompt"
+              >
+                <X size={11} />
+                <span>TURN OFF</span>
+              </button>
+            </div>
+          ) : (
+            <button
+              className="location-btn"
+              onClick={requestLocation}
+              disabled={locationStatus === 'LOCATING'}
+              title="Locate my position on the storm radar (3 km radius)"
+            >
+              <Navigation size={12} />
+              <span>
+                {locationStatus === 'LOCATING' ? 'LOCATING…' : 'MY LOCATION (3 KM)'}
+              </span>
+            </button>
+          )}
 
           <button
             className="map-action-btn"

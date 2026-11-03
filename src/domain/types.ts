@@ -24,6 +24,7 @@ export type Mode = 'EMERGENCY' | 'AVIATION' | 'AGRICULTURE' | 'URBAN'
 export type HazardKey = 'composite' | 'lightning' | 'hail' | 'wind' | 'rainfall' | 'cloudburst'
 export type LayerKey = 'riskGrid' | 'radar' | 'tracks' | 'lightning' | 'assets' | 'roads'
 export type DataStreamMode = 'SYNTHETIC' | 'REAL_TIME'
+export type Phenomenon = 'ALL' | 'LIGHTNING' | 'HAIL' | 'CLOUDBURST' | 'DOWNBURST'
 
 export interface Point {
   x: number
