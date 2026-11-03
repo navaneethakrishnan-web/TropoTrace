@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react'
 import {
   Bot,
   Check,
+  CloudSun,
   Info,
   Loader2,
   MessageSquare,
@@ -9,9 +10,11 @@ import {
   Send,
   ShieldCheck,
   Sparkles,
+  Thermometer,
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
 import { generateAnalystResponseAsync, SUGGESTED_PROMPTS } from '../domain/analyst'
+import { fetchLiveWeather, type LiveWeatherData } from '../services/weatherService'
 import type { AnalystMessage } from '../domain/types'
 
 export function AnalystView() {
@@ -20,15 +23,20 @@ export function AnalystView() {
 
   const [inputQuery, setInputQuery] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [liveWeather, setLiveWeather] = useState<LiveWeatherData | null>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    fetchLiveWeather().then(setLiveWeather).catch(() => {})
+  }, [])
 
   const [messages, setMessages] = useState<AnalystMessage[]>([
     {
       id: 'init-msg',
       sender: 'analyst',
-      text: `Hello Operator. I am **Tropo**, your AI-powered meteorological copilot grounded in the live convective nowcast state for **${cell.name} (${cell.id})**. I'm powered by advanced AI to provide intelligent, context-aware storm analysis.\n\nSelect a question from the left panel or type any meteorological inquiry — I can analyze cell kinematics, active hazards, impact exposure, sensor consensus, and much more.`,
+      text: `Hello Operator. I am **Tropo**, your AI-powered meteorological copilot grounded in live convective nowcast state for **${cell.name} (${cell.id})** and connected to the **OpenWeather Live Telemetry API**.\n\nI can answer questions regarding real-time temperatures, ambient conditions, convective cell kinematics, active hazard triggers, exposed assets, and multi-sensor consensus. Try asking *"What is the current temperature?"* or select an operational inquiry from the left panel.`,
       timestamp: 'Just now',
-      citations: ['Live Convective State Snapshot', 'Groq AI (GPT-OSS 120B)'],
+      citations: ['Live Convective State Snapshot', 'OpenWeatherMap Live API', 'Groq AI (GPT-OSS 120B)'],
       evidenceConfidence: 98,
     },
   ])
@@ -138,6 +146,12 @@ export function AnalystView() {
               <span>STAGE: <b className="text-amber">{cell.lifecycle}</b></span>
               <span>CONSENSUS: <b>{snapshot.consensus}%</b></span>
             </div>
+            {liveWeather && (
+              <div className="context-meta-row" style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid var(--panel-border)' }}>
+                <span>WEATHER: <b>{liveWeather.temp}°C · {liveWeather.city}</b></span>
+                <span>HUMIDITY: <b>{liveWeather.humidity}%</b></span>
+              </div>
+            )}
           </div>
 
           {/* Categorized Suggested Prompts */}
@@ -259,8 +273,8 @@ export function AnalystView() {
           <div className="analyst-footnote">
             <Info size={12} />
             <span>
-              Tropo is powered by <b>Groq AI (GPT-OSS 120B)</b> and grounded in live scenario data.
-              All responses are evidence-based with cited sources and confidence scores.
+              Tropo is powered by <b>Groq AI (GPT-OSS 120B)</b> and connected to <b>OpenWeather API</b>.
+              All responses are evidence-based with real-world temperatures, atmospheric metrics, and cited instruments.
             </span>
           </div>
         </div>

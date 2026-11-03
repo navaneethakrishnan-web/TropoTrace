@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react'
 import {
   Clock3,
+  CloudSun,
   Globe,
   Info,
   LogOut,
@@ -8,9 +10,11 @@ import {
   Moon,
   Radio,
   Sun,
+  Thermometer,
   Zap,
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
+import { fetchLiveWeather, type LiveWeatherData } from '../services/weatherService'
 
 const viewTitles: Record<string, string> = {
   command: 'Command Center',
@@ -50,6 +54,15 @@ export function Header() {
   } = useApp()
 
   const cell = snapshot.cells.find((c) => c.id === snapshot.selectedCellId) ?? snapshot.cells[0]
+  const [liveWeather, setLiveWeather] = useState<LiveWeatherData | null>(null)
+
+  useEffect(() => {
+    fetchLiveWeather().then(setLiveWeather).catch(() => {})
+    const timer = window.setInterval(() => {
+      fetchLiveWeather().then(setLiveWeather).catch(() => {})
+    }, 120000)
+    return () => window.clearInterval(timer)
+  }, [])
 
   return (
     <header className="top-bar">
@@ -90,6 +103,19 @@ export function Header() {
             {cell.lifecycle}
           </b>
         </div>
+
+        {/* Live OpenWeather Ambient Chip */}
+        {liveWeather && (
+          <div
+            className="live-weather-header-chip hidden-mobile"
+            title={`Live Weather: ${liveWeather.city} · ${liveWeather.temp}°C (${liveWeather.condition}, ${liveWeather.description}) · Humidity ${liveWeather.humidity}% · Wind ${liveWeather.windSpeedKmH} km/h from ${liveWeather.windDirection} · Telemetry source: ${liveWeather.source}`}
+          >
+            <Thermometer size={12} className="text-teal" />
+            <span className="weather-temp"><b>{liveWeather.temp}°C</b></span>
+            <span className="weather-city">{liveWeather.city}</span>
+            <span className="weather-cond hidden-tablet">{liveWeather.condition}</span>
+          </div>
+        )}
 
         {/* Live Simulation Clock (IST) */}
         <div className="clock-readout" title="Simulation Frame Time (IST)">

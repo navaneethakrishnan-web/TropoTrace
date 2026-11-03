@@ -779,6 +779,36 @@ select:focus-visible {
   border-radius: 4px;
 }
 
+.live-weather-header-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-secondary);
+  padding: 4px 9px;
+  background: var(--panel-elevated);
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  transition: all var(--transition-fast);
+}
+.live-weather-header-chip:hover {
+  border-color: var(--teal);
+  background: var(--panel-active);
+}
+.live-weather-header-chip .weather-temp b {
+  color: var(--teal);
+  font-weight: 700;
+}
+.live-weather-header-chip .weather-city {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.live-weather-header-chip .weather-cond {
+  color: var(--text-muted);
+  font-size: 9px;
+}
+
 .cell-severity-pill {
   padding: 1px 5px;
   border-radius: 3px;

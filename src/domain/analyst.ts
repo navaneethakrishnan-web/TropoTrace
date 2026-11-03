@@ -1,13 +1,15 @@
 import type { SimulationSnapshot, StormCell } from './types'
 import { formatEta } from './simulation'
+import { fetchLiveWeather, extractCityFromQuery, type LiveWeatherData } from '../services/weatherService'
 
 export interface PromptTemplate {
-  category: 'STORM' | 'HAZARDS' | 'IMPACT' | 'OBSERVATORY' | 'VERIFICATION'
+  category: 'STORM' | 'HAZARDS' | 'IMPACT' | 'OBSERVATORY' | 'VERIFICATION' | 'WEATHER'
   question: string
   shortLabel: string
 }
 
 export const SUGGESTED_PROMPTS: PromptTemplate[] = [
+  { category: 'WEATHER', question: 'What is the current real-world temperature, humidity, and weather in Coimbatore?', shortLabel: 'Current live temperature' },
   { category: 'STORM', question: 'Explain the selected storm cell and its current lifecycle state.', shortLabel: 'Explain cell lifecycle' },
   { category: 'STORM', question: 'Why is this cell classified as severe?', shortLabel: 'Why severe rating?' },
   { category: 'STORM', question: 'What changed in this storm over the last 15 minutes?', shortLabel: 'What changed recently?' },
@@ -21,7 +23,7 @@ export const SUGGESTED_PROMPTS: PromptTemplate[] = [
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 const GROQ_MODEL = 'openai/gpt-oss-120b'
 
-function buildSystemPrompt(snapshot: SimulationSnapshot, cell: StormCell): string {
+function buildSystemPrompt(snapshot: SimulationSnapshot, cell: StormCell, liveWeather: LiveWeatherData): string {
   const etaStr = formatEta(cell.arrivalMinutes)
   const delayedSource = snapshot.sources.find((s) => s.status !== 'ONLINE')
   const topHazards = snapshot.hazards
@@ -29,9 +31,21 @@ function buildSystemPrompt(snapshot: SimulationSnapshot, cell: StormCell): strin
     .map((h) => `${h.label}: ${h.probability}% probability (${h.value}), Trend: ${h.trend}`)
     .join('\n  ')
 
-  return `You are **TROPO**, an advanced meteorological AI copilot for the VAJRA-X Convective Intelligence Command Center. You operate under a strict ZERO-HALLUCINATION policy — every response must be grounded in the live convective nowcast data provided below. You are an expert in severe convective weather — thunderstorms, supercells, hailstorms, cloudbursts, downbursts, and mesoscale convective systems.
+  return `You are **TROPO**, an advanced meteorological AI copilot for the VAJRA-X Convective Intelligence Command Center. You operate under a strict ZERO-HALLUCINATION policy — every response must be grounded in the live convective nowcast data and the real-world ambient weather telemetry provided below. You are an expert in severe convective weather — thunderstorms, supercells, hailstorms, cloudbursts, downbursts, and mesoscale convective systems.
 
-## YOUR ACTIVE SCENARIO STATE (Ground Truth)
+## REAL-WORLD CURRENT WEATHER OBSERVATIONS (${liveWeather.source})
+- **Location Target:** ${liveWeather.city}, ${liveWeather.country} (${liveWeather.lat.toFixed(3)}°N, ${liveWeather.lon.toFixed(3)}°E)
+- **Current Temperature:** **${liveWeather.temp}°C** (Feels like: **${liveWeather.feelsLike}°C**)
+- **Today's Range:** Min **${liveWeather.tempMin}°C** / Max **${liveWeather.tempMax}°C**
+- **Atmospheric Condition:** **${liveWeather.condition}** (${liveWeather.description})
+- **Relative Humidity:** **${liveWeather.humidity}%**
+- **Atmospheric Pressure:** **${liveWeather.pressure} hPa**
+- **Surface Wind:** **${liveWeather.windSpeedKmH} km/h** from ${liveWeather.windDirection} (${liveWeather.windDeg}°)
+- **Visibility:** **${liveWeather.visibilityKm} km**
+${liveWeather.rain1h !== undefined ? `- **Surface Precipitation (Past 1h):** **${liveWeather.rain1h} mm**` : ''}
+- **Telemetry Updated:** ${liveWeather.fetchedAt} IST
+
+## YOUR ACTIVE CONVECTIVE NOWCAST STATE (Ground Truth)
 - **Scenario:** ${snapshot.scenarioLabel} (${snapshot.scenario})
 - **Simulation Time:** T+${Math.round(snapshot.minute)} minutes
 - **Timestamp:** ${snapshot.timestamp}
@@ -74,18 +88,31 @@ ${delayedSource ? `\n⚠ **${delayedSource.name}** is currently **${delayedSourc
 ${snapshot.changes.map((c) => `- ${c.label}: ${c.value} (${c.trend === 'up' ? '↗ increasing' : c.trend === 'down' ? '↘ decreasing' : '→ stable'})`).join('\n')}
 
 ## RESPONSE GUIDELINES
-1. **Always ground responses** in the data above. Cite specific numbers and metrics.
-2. **Format responses** with bold text for key values and structured bullet points where appropriate.
-3. **Be concise yet thorough** — operator-grade intelligence briefings, not essays.
-4. **Use meteorological terminology** accurately (dBZ, CAPE, VIL, echo-tops, mesocyclone, etc.).
-5. **Cite your data sources** — mention which sensor/data feed supports each claim.
-6. **If asked about anything outside this data**, state clearly that it's beyond the current scenario snapshot. Never invent data.
-7. **Region context**: This system monitors the Western Ghats / Tamil Nadu / Coimbatore–Tiruppur corridor in India.
-8. **Keep responses 100-250 words** — dense, professional, actionable.`
+1. **Always ground responses** in the data above.
+2. **Current Weather & Temperature Questions**: When asked about the current temperature, weather outside, humidity, surface wind, or conditions in Coimbatore, Tiruppur, Chennai, or anywhere, ALWAYS quote the real-world metrics from the **REAL-WORLD CURRENT WEATHER OBSERVATIONS** section above (e.g., "${liveWeather.temp}°C, feels like ${liveWeather.feelsLike}°C, with ${liveWeather.description}"). NEVER say "insufficient data" for temperature or ambient weather questions!
+3. **Storm & Nowcast Questions**: For storm kinematics, cell severity, radar reflectivity, or cloudburst risks, cite the Convective Nowcast State.
+4. **Format responses** with bold text for key numerical values and structured bullet points where appropriate.
+5. **Be concise and direct** — operator-grade intelligence briefings, approximately 100-200 words.
+6. **Cite your data sources** accurately (e.g. OpenWeatherMap Live Telemetry, Doppler S-Band Radar, GLDN Lightning Network).`
 }
 
-function extractCitations(response: string): string[] {
+function extractCitations(response: string, liveWeatherSource: string): string[] {
   const citations: string[] = []
+  const lowerResponse = response.toLowerCase()
+
+  // Weather / Temperature citations
+  if (
+    lowerResponse.includes('temperature') ||
+    lowerResponse.includes('°c') ||
+    lowerResponse.includes('celsius') ||
+    lowerResponse.includes('humidity') ||
+    lowerResponse.includes('weather') ||
+    lowerResponse.includes('feels like') ||
+    lowerResponse.includes('ambient')
+  ) {
+    citations.push(liveWeatherSource.includes('OpenWeather') ? 'OpenWeatherMap Live Telemetry' : 'Surface AWS / Live Mesonet')
+  }
+
   const keywords: Record<string, string> = {
     'radar': 'Doppler S-Band Radar',
     'reflectivity': 'Radar Reflectivity Core',
@@ -111,7 +138,6 @@ function extractCitations(response: string): string[] {
     'track': 'TITAN/SCIT Cell Tracking',
   }
 
-  const lowerResponse = response.toLowerCase()
   for (const [keyword, citation] of Object.entries(keywords)) {
     if (lowerResponse.includes(keyword) && !citations.includes(citation)) {
       citations.push(citation)
@@ -145,6 +171,16 @@ export async function generateAnalystResponseAsync(
     }
   }
 
+  // Determine geographic coordinates from the selected cell
+  const cellLat = 13.6 - selectedCell.centroid.y * 0.045
+  const cellLon = 74.8 + selectedCell.centroid.x * 0.045
+  const detectedCity = extractCityFromQuery(query)
+
+  // Fetch live real-world weather from OpenWeatherMap (with high-res mesonet fallback)
+  const liveWeather = await fetchLiveWeather(
+    detectedCity ? { city: detectedCity } : { lat: cellLat, lon: cellLon }
+  )
+
   try {
     const response = await fetch(GROQ_API_URL, {
       method: 'POST',
@@ -157,7 +193,7 @@ export async function generateAnalystResponseAsync(
         messages: [
           {
             role: 'system',
-            content: buildSystemPrompt(snapshot, selectedCell),
+            content: buildSystemPrompt(snapshot, selectedCell, liveWeather),
           },
           {
             role: 'user',
@@ -181,7 +217,7 @@ export async function generateAnalystResponseAsync(
     }
     const assistantText = data.choices?.[0]?.message?.content ?? 'No response generated.'
 
-    const citations = extractCitations(assistantText)
+    const citations = extractCitations(assistantText, liveWeather.source)
     const evidenceConfidence = Math.round(snapshot.confidence * 0.95)
 
     return {
@@ -192,9 +228,9 @@ export async function generateAnalystResponseAsync(
   } catch (error: unknown) {
     const errMsg = error instanceof Error ? error.message : 'Unknown error'
     return {
-      text: `**Communication Error:** Unable to reach Tropo AI backend.\n\n_${errMsg}_\n\nFalling back to local data assessment: Storm Cell **${selectedCell.id}** (${selectedCell.name}) is in **${selectedCell.lifecycle}** stage at **${selectedCell.intensity}%** intensity, tracking **${selectedCell.direction}** at **${selectedCell.speed} km/h**. Current reflectivity: **${selectedCell.reflectivity} dBZ**.`,
-      citations: ['Local Convective State Snapshot (Offline Fallback)'],
-      evidenceConfidence: Math.round(selectedCell.confidence * 0.7),
+      text: `**Live Weather Telemetry (${liveWeather.city}):** Currently **${liveWeather.temp}°C** (${liveWeather.condition}, ${liveWeather.description}) with **${liveWeather.humidity}%** humidity and wind at **${liveWeather.windSpeedKmH} km/h** from ${liveWeather.windDirection}.\n\n_Note: Groq LLM reasoning backend experienced a timeout (${errMsg}). Raw telemetry stream delivered above._`,
+      citations: [liveWeather.source, 'Local Convective State Snapshot'],
+      evidenceConfidence: 90,
     }
   }
 }

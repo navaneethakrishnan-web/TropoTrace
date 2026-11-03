@@ -63,6 +63,7 @@ The platform continuously determines storm kinematics, tracks convective cells u
 | **Icons & Visual Semantics** | **Lucide React** | `Latest` | Consistent SVG meteorological, hardware, and operational indicator icon set. |
 | **Styling & Design System** | **Custom CSS3** | 8,500+ lines (`app.css`) | Custom dark theme inspired by tactical command rooms (Deep Midnight Green `#06100E`, Electric Teal `#38E4C0`, Cyan `#56CFFF`, Amber `#FFC857`, Red `#FF4438`). |
 | **Speech Audio Engine** | **Web Speech API** | `SpeechSynthesis` | Client-side native text-to-speech broadcast for instant emergency audio dissemination. |
+| **Real-World Weather API** | **OpenWeatherMap API** | `v2.5 Current Weather` | Ingests live temperature, humidity, surface pressure, and wind conditions across monitored cities. |
 
 ---
 
@@ -538,6 +539,9 @@ VITE_FIREBASE_APP_ID=1:181743787437:web:619e5b42a230a66a905524
 
 # Groq Cloud API Key for Tropo AI Copilot
 VITE_GROQ_API_KEY=gsk_your_groq_api_key_here
+
+# OpenWeatherMap API Key
+VITE_OPENWEATHER_API_KEY=your_openweather_api_key_here
 ```
 
 ### 2. Build Pipeline
