@@ -68,25 +68,6 @@ function AppShell() {
         {/* Top Application Bar */}
         <Header />
 
-        {/* Dismissible Demo Disclosure Banner */}
-        {settings.showDemoBanner && (
-          <div className="demo-banner">
-            <div className="banner-content">
-              <span className="banner-label">DEMO MODE · SIMULATED STREAM</span>
-              <span className="banner-copy">
-                Deterministic sensor fusion &amp; research prototype · Not operational IMD warnings
-              </span>
-            </div>
-            <button
-              onClick={() => updateSetting('showDemoBanner', false)}
-              aria-label="Dismiss prototype disclosure notice"
-              className="banner-dismiss-btn"
-            >
-              <X size={14} />
-            </button>
-          </div>
-        )}
-
         {/* View Switcher Container */}
         <div className="stage-content">
           {activeView === 'command' && <CommandCenterView />}

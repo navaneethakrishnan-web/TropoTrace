@@ -105,21 +105,21 @@ export function Header() {
         <button
           className={`stream-mode-pill ${dataStreamMode === 'SYNTHETIC' ? 'active-synthetic' : ''}`}
           onClick={() => setDataStreamMode('SYNTHETIC')}
-          title="Synthetic Mode: Pre-configured convective scenarios (Hail, Cloudburst, Downburst, Initiation) designed for stress-testing and judging demonstrations."
+          title="Simulation Mode: Pre-calibrated convective storm scenarios"
           type="button"
         >
           <SlidersHorizontal size={12} />
-          <span>SYNTHETIC SCENARIOS</span>
+          <span>SIMULATION SCENARIOS</span>
         </button>
         <button
           className={`stream-mode-pill ${dataStreamMode === 'REAL_TIME' ? 'active-realtime' : ''}`}
           onClick={() => setDataStreamMode('REAL_TIME')}
-          title="Real-Time Mode: Ingests live telemetry from OpenWeatherMap & ground mesonet. Reflects real-world ambient weather."
+          title="Live Telemetry Mode: Reflects actual real-world atmospheric observations"
           type="button"
         >
           <span className="live-pulse-dot" />
           <Activity size={12} />
-          <span>LIVE OPENWEATHER</span>
+          <span>LIVE TELEMETRY</span>
         </button>
       </div>
 
@@ -184,12 +184,12 @@ export function Header() {
           className={`demo-status-pill ${dataStreamMode === 'REAL_TIME' ? 'realtime-badge' : 'synthetic-badge'}`}
           title={
             dataStreamMode === 'REAL_TIME'
-              ? `Live OpenWeather Telemetry active (${liveWeather?.city ?? 'Coimbatore'}). Rate limit: ${rateLimitStatus.used}/${rateLimitStatus.max} req/min.`
-              : 'Research prototype using synthetic convective scenarios'
+              ? `Live Telemetry active (${liveWeather?.city ?? 'Coimbatore'}).`
+              : 'Deterministic convective simulation stream'
           }
         >
           <span className={`demo-pip ${dataStreamMode === 'REAL_TIME' ? 'green-pip' : ''}`} />
-          <span>{dataStreamMode === 'REAL_TIME' ? 'LIVE OPENWEATHER' : 'SIMULATED STREAM'}</span>
+          <span>{dataStreamMode === 'REAL_TIME' ? 'LIVE TELEMETRY' : 'SIMULATION MODE'}</span>
         </div>
 
         {/* Theme Toggle */}
@@ -200,16 +200,6 @@ export function Header() {
           title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
         >
           {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
-        </button>
-
-        {/* Demo Banner Visibility Toggle */}
-        <button
-          className={`top-icon-button hidden-mobile ${settings.showDemoBanner ? 'active' : ''}`}
-          onClick={() => updateSetting('showDemoBanner', !settings.showDemoBanner)}
-          aria-label="Toggle prototype disclosure banner"
-          title="Toggle prototype disclosure banner"
-        >
-          <Info size={15} />
         </button>
 
         {/* User Account / Sign Out */}

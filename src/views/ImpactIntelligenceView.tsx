@@ -138,7 +138,7 @@ export function ImpactIntelligenceView() {
           <div className="panel-title">
             <div>
               <Route size={15} />
-              <h3>Corridor Travel-Risk Prototype</h3>
+              <h3>Corridor Travel-Risk Assessment</h3>
             </div>
             <span className="meta-tag">NH-81 CORRIDOR</span>
           </div>

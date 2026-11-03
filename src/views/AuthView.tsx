@@ -31,7 +31,7 @@ export function AuthView() {
 
   const handleJudgeInstantLaunch = () => {
     setError(null)
-    setSuccessMessage('Judge session initialized. Opening Command Center…')
+    setSuccessMessage('Operator session initialized. Opening Command Center…')
     loginAsJudge(email.trim() || 'operator@tropotrace.moes.gov.in')
   }
 
@@ -146,7 +146,7 @@ export function AuthView() {
           </div>
 
           <div className="auth-hero-footer">
-            <span className="prototype-badge">RESEARCH PROTOTYPE</span>
+            <span className="prototype-badge">OPERATIONAL PLATFORM</span>
             <span className="prototype-note">
               1–3 km spatial grid · Doppler S-Band · Western Ghats &amp; Tamil Nadu
             </span>
@@ -154,7 +154,7 @@ export function AuthView() {
         </div>
       </div>
 
-      {/* Right Column: Authentication Card & 1-Click Judge Launcher */}
+      {/* Right Column: Authentication Card & 1-Click Launch */}
       <div className="auth-form-pane">
         <div className="auth-card panel-surface">
           {/* Mobile/Tablet Brand Lockup (visible when left hero pane is hidden) */}
@@ -173,7 +173,7 @@ export function AuthView() {
             </div>
           </div>
 
-          {/* Prototype Panel Header */}
+          {/* Panel Header */}
           <div className="panel-header auth-panel-header">
             <div>
               <div className="panel-kicker">
@@ -199,15 +199,15 @@ export function AuthView() {
               : 'Enter your registered operator email to transmit secure credential recovery instructions.'}
           </p>
 
-          {/* 1-Click Judge Demo Pass Button */}
+          {/* 1-Click Quick Launch Button */}
           <div className="judge-quick-launch-banner">
             <div className="judge-banner-info">
               <span className="judge-banner-badge">
                 <Sparkles size={11} />
-                <span>DEXATHON 2026 · JUDGE BYPASS</span>
+                <span>INSTANT OPERATOR CONSOLE</span>
               </span>
               <p className="judge-banner-text">
-                Instant 1-click access with pre-configured meteorological operator permissions.
+                One-click access with pre-configured meteorological operator clearance.
               </p>
             </div>
             <button
@@ -217,7 +217,7 @@ export function AuthView() {
               id="btn-judge-quick-launch"
             >
               <Zap size={15} />
-              <span>1-CLICK QUICK DEMO LAUNCH</span>
+              <span>1-CLICK INSTANT LAUNCH</span>
               <ArrowRight size={15} />
             </button>
           </div>

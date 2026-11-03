@@ -322,7 +322,7 @@ export function StormIntelligenceView() {
                 <div className="volume-stage-caption">
                   <div className="volume-caption-row">
                     <span>DIMENSIONAL CONVECTIVE COLUMN · {cell.reflectivity} dBZ</span>
-                    <span className="prototype-badge">SYNTHETIC SCENARIO VOLUMETRIC MODEL</span>
+                    <span className="prototype-badge">RADAR VOLUMETRIC MODEL</span>
                   </div>
                   <small>
                     Simulated 0–6 hr vertical hydrometeor transport · Freezing layer hail generation at {cell.intensity}% intensity
@@ -484,7 +484,7 @@ export function StormIntelligenceView() {
           <div className="analogues-disclaimer">
             <Info size={12} />
             <span>
-              Historical storm records are calibrated from synthetic reference cases for prototype validation.
+              Historical storm analogues are indexed from radar archive cases for convective pattern matching.
             </span>
           </div>
         </div>

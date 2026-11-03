@@ -148,33 +148,6 @@ export function RealTimeDetectionModal() {
           </div>
         )}
 
-        {/* Judge Explanation Card */}
-        <div className="judge-callout-card">
-          <div className="judge-callout-head">
-            <Sparkles size={14} />
-            <span>HOW TO EXPLAIN THIS TO EVALUATORS &amp; JUDGES</span>
-          </div>
-          <p>
-            {type === 'LOCATION_REQUIRED' ? (
-              <>
-                In <b>Real Data Mode</b>, TropoTrace does not show arbitrary animations unless linked to real coordinates.
-                Turn on your device location to measure actual local radar reflectivity, or switch to <b>Synthetic Mode</b> to demo extreme storm scenarios.
-              </>
-            ) : type === 'NO_HAZARD_DETECTED' ? (
-              <>
-                Real severe convective storms (cloudbursts, lightning strikes) are intermittent events.
-                Because current local weather is calm (<b>{metrics?.condition || 'Clear'}</b>), TropoTrace preserves scientific accuracy by showing <b>zero false alarms</b>.
-                Click below to switch to <b>Synthetic Mode</b> to showcase simulated animations to judges!
-              </>
-            ) : (
-              <>
-                Active convective signatures matching <b>{phenomenon}</b> have been confirmed in your immediate 3 km cell.
-                Doppler reflectivity and sensor consensus are actively streaming.
-              </>
-            )}
-          </p>
-        </div>
-
         {/* Action Buttons */}
         <div className="cap-modal-actions detection-modal-actions">
           {type === 'LOCATION_REQUIRED' && (
@@ -191,17 +164,17 @@ export function RealTimeDetectionModal() {
           <button
             className="btn btn-accent"
             onClick={handleSwitchToSynthetic}
-            title="Switch to Synthetic Simulation Mode to demonstrate all animations to judges"
           >
             <Sparkles size={14} />
-            <span>SWITCH TO SYNTHETIC MODE (SHOW ANIMATIONS)</span>
+            <span>SWITCH TO SIMULATION MODE</span>
           </button>
 
           <button className="btn btn-secondary" onClick={handleClose}>
-            {type === 'HAZARD_DETECTED' ? 'VIEW ON MAP' : 'DISMISS'}
+            {type === 'HAZARD_DETECTED' ? 'VIEW ON MAP' : 'CLOSE'}
           </button>
         </div>
       </div>
     </div>
   )
 }
+

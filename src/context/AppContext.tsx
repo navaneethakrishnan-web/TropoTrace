@@ -254,7 +254,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (stored) return JSON.parse(stored)
     } catch (_) { /* ignore */ }
     return {
-      showDemoBanner: true,
+      showDemoBanner: false,
       reducedMotion: false,
       highContrast: false,
       autoStart: true,
@@ -275,7 +275,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setUser({
           uid: 'judge-dexathon-lead',
           email: parsed.email || 'operator@tropotrace.moes.gov.in',
-          displayName: 'MoES Lead Operator (Judge)',
+          displayName: 'MoES Lead Meteorologist',
         } as unknown as User)
       }
     } catch (_) { /* ignore */ }
@@ -391,7 +391,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const dummyUser = {
       uid: 'judge-dexathon-lead',
       email: demoEmail,
-      displayName: 'MoES Lead Operator (Judge)',
+      displayName: 'MoES Lead Meteorologist',
     } as unknown as User
     setUser(dummyUser)
     try {

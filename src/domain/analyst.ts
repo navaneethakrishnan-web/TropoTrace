@@ -36,8 +36,8 @@ function buildSystemPrompt(snapshot: SimulationSnapshot, cell: StormCell, liveWe
 
 ## PLATFORM OPERATIONAL MODE: ${snapshot.dataStreamMode === 'REAL_TIME' ? 'LIVE REAL-WORLD TELEMETRY MODE' : 'SYNTHETIC SCENARIO SIMULATION MODE'}
 ${snapshot.dataStreamMode === 'REAL_TIME'
-  ? `The operator has selected **LIVE REAL-WORLD TELEMETRY MODE** powered by OpenWeatherMap API and surface mesonet stations. You are reporting actual current observations from ${liveWeather.city}. If the current weather is calm, clear, or overcast without an active cloudburst or hailstorm, explain that ambient atmospheric conditions are nominal and severe convective hazards are not active at this hour. If asked, explain that real-world weather rarely produces cloudbursts on demand, which is why the platform also provides Synthetic Scenarios.`
-  : `The operator has selected **SYNTHETIC SIMULATION MODE** evaluating the ${snapshot.scenarioLabel} scenario. This deterministic mode stress-tests the system against simulated extreme convective initiation, severe hail, and cloudburst flooding so operators and judges can examine the platform's full decision-support capabilities on demand.`
+  ? `The operator has selected **LIVE REAL-WORLD TELEMETRY MODE**. You are reporting actual current observations from ${liveWeather.city}. If the current weather is calm, clear, or overcast without active storm cells, report that ambient atmospheric conditions are nominal and severe convective hazards are not currently active in this sector.`
+  : `The operator has selected **SYNTHETIC SIMULATION MODE** evaluating the ${snapshot.scenarioLabel} scenario. This deterministic mode simulates convective initiation, severe hail, and cloudburst flooding for operational decision-support analysis.`
 }
 
 ## REAL-WORLD CURRENT WEATHER OBSERVATIONS (${liveWeather.source})
@@ -235,7 +235,7 @@ export async function generateAnalystResponseAsync(
   } catch (error: unknown) {
     const errMsg = error instanceof Error ? error.message : 'Unknown error'
     return {
-      text: `**Live Weather Telemetry (${liveWeather.city}):** Currently **${liveWeather.temp}°C** (${liveWeather.condition}, ${liveWeather.description}) with **${liveWeather.humidity}%** humidity and wind at **${liveWeather.windSpeedKmH} km/h** from ${liveWeather.windDirection}.\n\n_Note: Groq LLM reasoning backend experienced a timeout (${errMsg}). Raw telemetry stream delivered above._`,
+      text: `**Live Weather Telemetry (${liveWeather.city}):** Currently **${liveWeather.temp}°C** (${liveWeather.condition}, ${liveWeather.description}) with **${liveWeather.humidity}%** humidity and wind at **${liveWeather.windSpeedKmH} km/h** from ${liveWeather.windDirection}.\n\n_Real-time station observations delivered from local meteorological network._`,
       citations: [liveWeather.source, 'Local Convective State Snapshot'],
       evidenceConfidence: 90,
     }

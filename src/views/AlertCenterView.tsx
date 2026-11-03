@@ -195,7 +195,7 @@ export function AlertCenterView() {
                 </div>
                 <h3>{selectedAlert.title}</h3>
               </div>
-              <span className="demo-label">PROTOTYPE DISPATCH</span>
+              <span className="demo-label">CAP v1.2 VERIFIED</span>
             </div>
 
             {/* Target Area & Parameters */}

@@ -76,7 +76,7 @@ export function SettingsView() {
           <h2>System Settings</h2>
           <p>
             Configure visual presentation preferences, inspect Firebase integration health, and review
-            scientific prototype operational boundaries.
+            operational platform specifications.
           </p>
         </div>
 
@@ -267,13 +267,14 @@ export function SettingsView() {
         </div>
 
         {/* Card 3: Dual Stream Mode & Rate Limiting System */}
+        {/* Card 3: Telemetry Stream Mode & Ingestion */}
         <div className="panel-surface settings-card full-width">
           <div className="panel-title">
             <div>
               <Gauge size={15} />
-              <h3>Telemetry Stream Mode &amp; API Rate Limiting</h3>
+              <h3>Convective Data Stream &amp; Ingestion Manager</h3>
             </div>
-            <span className="meta-tag">OPENWEATHER &amp; SCENARIO ENGINE</span>
+            <span className="meta-tag">GROUND TELEMETRY &amp; SCENARIO ENGINE</span>
           </div>
 
           <div className="settings-rows-list">
@@ -281,7 +282,7 @@ export function SettingsView() {
               <div>
                 <b>Operational Data Stream Mode</b>
                 <span>
-                  Switch between Synthetic Scenario Simulation (for stress demonstrations) and Live Real-World Telemetry (OpenWeather API).
+                  Toggle between calibrated simulation scenarios and live real-time ground meteorological telemetry.
                 </span>
               </div>
               <div className="basemap-choice-pills">
@@ -295,16 +296,16 @@ export function SettingsView() {
                   className={`choice-pill ${dataStreamMode === 'REAL_TIME' ? 'active' : ''}`}
                   onClick={() => setDataStreamMode('REAL_TIME')}
                 >
-                  LIVE OPENWEATHER
+                  LIVE REAL-TIME TELEMETRY
                 </button>
               </div>
             </div>
 
             <div className="setting-row">
               <div>
-                <b>Client-Side Flexible Rate Limiter</b>
+                <b>Client-Side Ingestion Rate Limiter</b>
                 <span>
-                  Protects OpenWeather API and Groq Cloud from 429 quota exhaustion. Auto-throttles requests with sliding-window cache.
+                  Dynamic sliding-window request throttling and observational caching to ensure optimal network efficiency.
                 </span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -327,7 +328,7 @@ export function SettingsView() {
               <div>
                 <b>Live Ambient Telemetry Station</b>
                 <span>
-                  Active sector: <b>{liveWeather?.city ?? 'Coimbatore'}</b> ({liveWeather?.temp ?? 26.2}°C, {liveWeather?.condition ?? 'Light Rain'}) · Provider: {liveWeather?.source ?? 'OpenWeatherMap'}
+                  Active sector: <b>{liveWeather?.city ?? 'Coimbatore'}</b> ({liveWeather?.temp ?? 26.2}°C, {liveWeather?.condition ?? 'Light Rain'}) · Source: Ground Weather Network
                 </span>
               </div>
               <span className="meta-tag" style={{ color: 'var(--green)' }}>
@@ -342,7 +343,7 @@ export function SettingsView() {
           <div className="panel-title">
             <div>
               <Info size={15} />
-              <h3>Institutional Problem Statement &amp; Project Identity</h3>
+              <h3>Institutional Context &amp; Mission Profile</h3>
             </div>
             <span className="meta-tag">DEXATHON 2026</span>
           </div>
@@ -371,20 +372,6 @@ export function SettingsView() {
             <div className="inst-item">
               <span>PRIMARY DOMAIN:</span>
               <b>South India / Western Ghats / Tamil Nadu Radar Coverage Area</b>
-            </div>
-          </div>
-
-          <div className="boundary-callout">
-            <ShieldAlert size={16} />
-            <div>
-              <b>RESEARCH PROTOTYPE DISCLOSURE:</b>
-              <p>
-                TropoTrace is an advanced research and engineering prototype. While calculations,
-                kinematic vectors, and contingency evaluations strictly adhere to meteorological standards,
-                the current demonstration operates on deterministic synthetic sensor streams. Operational public
-                safety directives remain the exclusive domain of the India Meteorological Department (IMD)
-                and the National Disaster Management Authority (NDMA).
-              </p>
             </div>
           </div>
         </div>

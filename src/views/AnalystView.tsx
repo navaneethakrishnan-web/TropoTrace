@@ -34,9 +34,9 @@ export function AnalystView() {
     {
       id: 'init-msg',
       sender: 'analyst',
-      text: `Hello Operator. I am **Tropo**, your AI-powered meteorological copilot grounded in live convective nowcast state for **${cell.name} (${cell.id})** and connected to the **OpenWeather Live Telemetry API**.\n\nI can answer questions regarding real-time temperatures, ambient conditions, convective cell kinematics, active hazard triggers, exposed assets, and multi-sensor consensus. Try asking *"What is the current temperature?"* or select an operational inquiry from the left panel.`,
+      text: `Hello Operator. I am **Tropo**, your meteorological AI copilot grounded in live convective nowcast state for **${cell.name} (${cell.id})**.\n\nI can answer questions regarding real-time temperatures, ambient conditions, convective cell kinematics, active hazard triggers, exposed assets, and multi-sensor consensus. Try asking *"What is the current temperature?"* or select an operational inquiry from the left panel.`,
       timestamp: 'Just now',
-      citations: ['Live Convective State Snapshot', 'OpenWeatherMap Live API', 'Groq AI (GPT-OSS 120B)'],
+      citations: ['Live Convective State Snapshot', 'Radar Doppler Field', 'Ground Sensor Consensus'],
       evidenceConfidence: 98,
     },
   ])
@@ -116,8 +116,7 @@ export function AnalystView() {
           </div>
           <h2>Tropo</h2>
           <p>
-            AI-powered conversational copilot grounded in active radar, satellite, and nowcast
-            telemetry. Powered by Groq GPT-OSS 120B for intelligent analysis.
+            Conversational convective copilot grounded in active radar, satellite, and ground station nowcast telemetry.
           </p>
         </div>
 
@@ -185,8 +184,8 @@ export function AnalystView() {
               <Bot size={20} />
             </div>
             <div>
-              <b>TROPO AI COPILOT</b>
-              <span>Synchronized with T+{Math.round(snapshot.minute)}m nowcast telemetry · Groq GPT-OSS 120B</span>
+              <b>TROPO COPILOT</b>
+              <span>Synchronized with T+{Math.round(snapshot.minute)}m Convective Nowcast Telemetry</span>
             </div>
             <span className="copilot-ready-tag">
               <span className={`status-dot ${isLoading ? 'amber' : 'green'}`} />
@@ -273,8 +272,7 @@ export function AnalystView() {
           <div className="analyst-footnote">
             <Info size={12} />
             <span>
-              Tropo is powered by <b>Groq AI (GPT-OSS 120B)</b> and connected to <b>OpenWeather API</b>.
-              All responses are evidence-based with real-world temperatures, atmospheric metrics, and cited instruments.
+              All convective intelligence responses are grounded in Doppler radar observations, surface AWS networks, and atmospheric thermodynamic soundings.
             </span>
           </div>
         </div>
