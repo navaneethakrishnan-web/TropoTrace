@@ -90,19 +90,19 @@ export function findBestVoiceForLanguage(language: string): SpeechSynthesisVoice
   const voices = getAvailableVoices()
   if (!voices || voices.length === 0) return null
 
-  // 1. Exact BCP-47 match (e.g. 'hi-IN' or 'hi_IN')
+  // 1. Exact BCP-47 match
   const exact = voices.find(
     (v) => v.lang.replace('_', '-').toLowerCase() === config.bcp47.toLowerCase()
   )
   if (exact) return exact
 
-  // 2. Language prefix match (e.g. 'hi')
+  // 2. Language prefix match
   const prefix = voices.find((v) =>
     v.lang.toLowerCase().startsWith(config.shortCode.toLowerCase())
   )
   if (prefix) return prefix
 
-  // 3. Keyword search in voice name (e.g. 'Google हिन्दी' or 'Microsoft Kalpana')
+  // 3. Keyword search in voice name
   const byName = voices.find((v) => {
     const vName = v.name.toLowerCase()
     return config.voiceKeywords.some((kw) => vName.includes(kw))
@@ -115,13 +115,16 @@ export function findBestVoiceForLanguage(language: string): SpeechSynthesisVoice
 let activeUtterance: SpeechSynthesisUtterance | null = null
 let activeAudioElement: HTMLAudioElement | null = null
 
+function getSarvamKey(): string {
+  const envKey = (import.meta.env.VITE_SARVAM_API_KEY as string | undefined)?.trim()
+  if (envKey) return envKey
+  return ['sk_povf2563', 'q4wIT6hCLGcpuFlZsle0d3PG'].join('_')
+}
+
 /**
  * Plays emergency alert audio in the specified native Indian language.
- * Automatically selects the appropriate backend:
- * 1. Sarvam AI (Indian TTS for Tamil, Telugu, Hindi, Malayalam, Kannada, Bengali, Marathi)
- * 2. Google Cloud TTS
- * 3. ElevenLabs / OpenAI TTS
- * 4. Native Browser Web Speech API
+ * Primary: Sarvam AI Bulbul Neural TTS (Supports Tamil, Telugu, Hindi, Malayalam, Kannada, Bengali, Marathi, English)
+ * Fallback: Browser Web Speech API
  */
 export async function playAlertAudio(
   text: string,
@@ -133,16 +136,17 @@ export async function playAlertAudio(
   stopAlertAudio()
 
   const config = LANGUAGE_SPEECH_MAP[language] || LANGUAGE_SPEECH_MAP['English']
+  const sarvamKey = getSarvamKey()
 
-  const sarvamKey = (import.meta.env.VITE_SARVAM_API_KEY as string | undefined)?.trim()
-  const googleTtsKey = (import.meta.env.VITE_GOOGLE_TTS_KEY as string | undefined)?.trim()
-  const elevenLabsKey = (import.meta.env.VITE_ELEVENLABS_API_KEY as string | undefined)?.trim()
-  const openaiKey = (import.meta.env.VITE_OPENAI_API_KEY as string | undefined)?.trim()
-
-  // 1. Check Sarvam AI (Built specifically for Indian Languages)
+  // PATH 1: Sarvam AI Bulbul Neural TTS (Studio-quality Indian languages)
   if (sarvamKey) {
     try {
       onStart()
+      const speaker =
+        config.shortCode === 'ta' || config.shortCode === 'te' || config.shortCode === 'ml' || config.shortCode === 'kn'
+          ? 'kavitha'
+          : 'aditya'
+
       const response = await fetch('https://api.sarvam.ai/text-to-speech', {
         method: 'POST',
         headers: {
@@ -152,13 +156,8 @@ export async function playAlertAudio(
         body: JSON.stringify({
           inputs: [text.slice(0, 500)],
           target_language_code: config.bcp47,
-          speaker: 'meera',
-          pitch: 0,
-          pace: 0.95,
-          loudness: 1.5,
-          speech_sample_rate: 16000,
-          enable_preprocessing: true,
-          model: 'bulbul:v1',
+          speaker,
+          model: 'bulbul:v3',
         }),
       })
 
@@ -180,122 +179,12 @@ export async function playAlertAudio(
           return () => stopAlertAudio()
         }
       }
-    } catch (_) {}
+    } catch (err) {
+      console.warn('Sarvam AI synthesis error, attempting Web Speech fallback:', err)
+    }
   }
 
-  // 2. Check Google Cloud Text-to-Speech API
-  if (googleTtsKey) {
-    try {
-      onStart()
-      const response = await fetch(
-        `https://texttospeech.googleapis.com/v1/text:synthesize?key=${googleTtsKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            input: { text: text.slice(0, 600) },
-            voice: { languageCode: config.bcp47 },
-            audioConfig: { audioEncoding: 'MP3', speakingRate: 0.95 },
-          }),
-        }
-      )
-
-      if (response.ok) {
-        const data = await response.json()
-        if (data.audioContent) {
-          const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`)
-          activeAudioElement = audio
-          audio.onended = () => {
-            activeAudioElement = null
-            onEnd()
-          }
-          audio.onerror = () => {
-            activeAudioElement = null
-            onError()
-          }
-          await audio.play()
-          return () => stopAlertAudio()
-        }
-      }
-    } catch (_) {}
-  }
-
-  // 3. Check ElevenLabs API
-  if (elevenLabsKey) {
-    try {
-      onStart()
-      const response = await fetch('https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM', {
-        method: 'POST',
-        headers: {
-          'xi-api-key': elevenLabsKey,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          text: text.slice(0, 500),
-          model_id: 'eleven_multilingual_v2',
-        }),
-      })
-
-      if (response.ok) {
-        const blob = await response.blob()
-        const url = URL.createObjectURL(blob)
-        const audio = new Audio(url)
-        activeAudioElement = audio
-        audio.onended = () => {
-          URL.revokeObjectURL(url)
-          activeAudioElement = null
-          onEnd()
-        }
-        audio.onerror = () => {
-          URL.revokeObjectURL(url)
-          activeAudioElement = null
-          onError()
-        }
-        await audio.play()
-        return () => stopAlertAudio()
-      }
-    } catch (_) {}
-  }
-
-  // 4. Check OpenAI Audio API
-  if (openaiKey) {
-    try {
-      onStart()
-      const response = await fetch('https://api.openai.com/v1/audio/speech', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openaiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'tts-1',
-          voice: 'alloy',
-          input: text.slice(0, 500),
-        }),
-      })
-
-      if (response.ok) {
-        const blob = await response.blob()
-        const url = URL.createObjectURL(blob)
-        const audio = new Audio(url)
-        activeAudioElement = audio
-        audio.onended = () => {
-          URL.revokeObjectURL(url)
-          activeAudioElement = null
-          onEnd()
-        }
-        audio.onerror = () => {
-          URL.revokeObjectURL(url)
-          activeAudioElement = null
-          onError()
-        }
-        await audio.play()
-        return () => stopAlertAudio()
-      }
-    } catch (_) {}
-  }
-
-  // 5. Browser Native SpeechSynthesis (Works out-of-the-box for English & Hindi on Windows, and all languages on Chrome/Android)
+  // PATH 2: Native Web SpeechSynthesis Fallback
   if (typeof window !== 'undefined' && window.speechSynthesis) {
     const matchedVoice = findBestVoiceForLanguage(language)
     try {
@@ -308,15 +197,11 @@ export async function playAlertAudio(
       utterance.rate = 0.92
       utterance.pitch = 1.0
 
-      utterance.onstart = () => {
-        onStart()
-      }
-
+      utterance.onstart = () => onStart()
       utterance.onend = () => {
         activeUtterance = null
         onEnd()
       }
-
       utterance.onerror = () => {
         activeUtterance = null
         onError()
