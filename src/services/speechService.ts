@@ -112,164 +112,230 @@ export function findBestVoiceForLanguage(language: string): SpeechSynthesisVoice
   return null
 }
 
-/**
- * Splits long text into speakable sentence chunks (< 160 chars) for TTS engines.
- */
-function splitTextIntoSpeechChunks(text: string, maxLen = 150): string[] {
-  const sentences = text.split(/(?<=[।!?.\n])\s+/)
-  const chunks: string[] = []
-  let currentChunk = ''
-
-  for (const sentence of sentences) {
-    if ((currentChunk + ' ' + sentence).trim().length <= maxLen) {
-      currentChunk = (currentChunk + ' ' + sentence).trim()
-    } else {
-      if (currentChunk) chunks.push(currentChunk)
-      if (sentence.length <= maxLen) {
-        currentChunk = sentence
-      } else {
-        // Break long sentence by comma or words
-        const words = sentence.split(' ')
-        currentChunk = ''
-        for (const word of words) {
-          if ((currentChunk + ' ' + word).trim().length <= maxLen) {
-            currentChunk = (currentChunk + ' ' + word).trim()
-          } else {
-            if (currentChunk) chunks.push(currentChunk)
-            currentChunk = word
-          }
-        }
-      }
-    }
-  }
-  if (currentChunk) chunks.push(currentChunk)
-  return chunks.filter((c) => c.trim().length > 0)
-}
-
-// Keep active utterance in memory to avoid garbage collection bug in Chromium
 let activeUtterance: SpeechSynthesisUtterance | null = null
-let activeAudioCleanup: (() => void) | null = null
+let activeAudioElement: HTMLAudioElement | null = null
 
 /**
  * Plays emergency alert audio in the specified native Indian language.
- * Uses native SpeechSynthesis with language matching and voice selection,
- * and falls back to Google Neural TTS stream if the local OS lacks that voice.
+ * Automatically selects the appropriate backend:
+ * 1. Sarvam AI (Indian TTS for Tamil, Telugu, Hindi, Malayalam, Kannada, Bengali, Marathi)
+ * 2. Google Cloud TTS
+ * 3. ElevenLabs / OpenAI TTS
+ * 4. Native Browser Web Speech API
  */
-export function playAlertAudio(
+export async function playAlertAudio(
   text: string,
   language: string,
   onStart: () => void,
   onEnd: () => void,
   onError: () => void
-): () => void {
-  // Stop any currently running speech
+): Promise<() => void> {
   stopAlertAudio()
 
   const config = LANGUAGE_SPEECH_MAP[language] || LANGUAGE_SPEECH_MAP['English']
-  const matchedVoice = findBestVoiceForLanguage(language)
 
-  // PATH A: Native Web SpeechSynthesis if voice or language engine is available
-  if (typeof window !== 'undefined' && window.speechSynthesis) {
-    // If we have a voice or if it's English/Hindi (which browsers support out of the box)
-    if (matchedVoice || config.shortCode === 'en' || config.shortCode === 'hi') {
-      try {
-        window.speechSynthesis.cancel()
-        const utterance = new SpeechSynthesisUtterance(text)
-        utterance.lang = config.bcp47
-        if (matchedVoice) {
-          utterance.voice = matchedVoice
-        }
-        utterance.rate = 0.92
-        utterance.pitch = 1.0
+  const sarvamKey = (import.meta.env.VITE_SARVAM_API_KEY as string | undefined)?.trim()
+  const googleTtsKey = (import.meta.env.VITE_GOOGLE_TTS_KEY as string | undefined)?.trim()
+  const elevenLabsKey = (import.meta.env.VITE_ELEVENLABS_API_KEY as string | undefined)?.trim()
+  const openaiKey = (import.meta.env.VITE_OPENAI_API_KEY as string | undefined)?.trim()
 
-        utterance.onstart = () => {
-          onStart()
-        }
-
-        utterance.onend = () => {
-          activeUtterance = null
-          onEnd()
-        }
-
-        utterance.onerror = () => {
-          activeUtterance = null
-          // Fall back to Audio fallback if speech synthesis errors out
-          tryAudioFallback()
-        }
-
-        activeUtterance = utterance
-        window.speechSynthesis.speak(utterance)
-
-        return () => {
-          stopAlertAudio()
-          onEnd()
-        }
-      } catch {
-        // Fallback to audio stream
-      }
-    }
-  }
-
-  // PATH B: High-fidelity Neural Audio stream for regional Indian languages without local voice
-  function tryAudioFallback(): () => void {
-    const chunks = splitTextIntoSpeechChunks(text, 140)
-    if (chunks.length === 0) {
-      onEnd()
-      return () => {}
-    }
-
-    let chunkIdx = 0
-    let isCancelled = false
-    let currentAudio: HTMLAudioElement | null = null
-
-    onStart()
-
-    const playNext = () => {
-      if (isCancelled) return
-      if (chunkIdx >= chunks.length) {
-        onEnd()
-        return
-      }
-
-      const chunk = chunks[chunkIdx]
-      chunkIdx++
-      const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${config.shortCode}&q=${encodeURIComponent(chunk)}`
-      const audio = new Audio(url)
-      currentAudio = audio
-
-      audio.onended = () => {
-        playNext()
-      }
-
-      audio.onerror = () => {
-        // If blocked or network error, attempt next chunk or complete
-        if (chunkIdx >= chunks.length) {
-          onEnd()
-        } else {
-          playNext()
-        }
-      }
-
-      audio.play().catch(() => {
-        // Autoplay policy or CORS fallback: try standard speech
-        onError()
+  // 1. Check Sarvam AI (Built specifically for Indian Languages)
+  if (sarvamKey) {
+    try {
+      onStart()
+      const response = await fetch('https://api.sarvam.ai/text-to-speech', {
+        method: 'POST',
+        headers: {
+          'api-subscription-key': sarvamKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          inputs: [text.slice(0, 500)],
+          target_language_code: config.bcp47,
+          speaker: 'meera',
+          pitch: 0,
+          pace: 0.95,
+          loudness: 1.5,
+          speech_sample_rate: 16000,
+          enable_preprocessing: true,
+          model: 'bulbul:v1',
+        }),
       })
-    }
 
-    playNext()
-
-    activeAudioCleanup = () => {
-      isCancelled = true
-      if (currentAudio) {
-        currentAudio.pause()
-        currentAudio.currentTime = 0
+      if (response.ok) {
+        const data = await response.json()
+        const base64Audio = data.audios?.[0]
+        if (base64Audio) {
+          const audio = new Audio(`data:audio/wav;base64,${base64Audio}`)
+          activeAudioElement = audio
+          audio.onended = () => {
+            activeAudioElement = null
+            onEnd()
+          }
+          audio.onerror = () => {
+            activeAudioElement = null
+            onError()
+          }
+          await audio.play()
+          return () => stopAlertAudio()
+        }
       }
-    }
-
-    return activeAudioCleanup
+    } catch (_) {}
   }
 
-  return tryAudioFallback()
+  // 2. Check Google Cloud Text-to-Speech API
+  if (googleTtsKey) {
+    try {
+      onStart()
+      const response = await fetch(
+        `https://texttospeech.googleapis.com/v1/text:synthesize?key=${googleTtsKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            input: { text: text.slice(0, 600) },
+            voice: { languageCode: config.bcp47 },
+            audioConfig: { audioEncoding: 'MP3', speakingRate: 0.95 },
+          }),
+        }
+      )
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.audioContent) {
+          const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`)
+          activeAudioElement = audio
+          audio.onended = () => {
+            activeAudioElement = null
+            onEnd()
+          }
+          audio.onerror = () => {
+            activeAudioElement = null
+            onError()
+          }
+          await audio.play()
+          return () => stopAlertAudio()
+        }
+      }
+    } catch (_) {}
+  }
+
+  // 3. Check ElevenLabs API
+  if (elevenLabsKey) {
+    try {
+      onStart()
+      const response = await fetch('https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM', {
+        method: 'POST',
+        headers: {
+          'xi-api-key': elevenLabsKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: text.slice(0, 500),
+          model_id: 'eleven_multilingual_v2',
+        }),
+      })
+
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = URL.createObjectURL(blob)
+        const audio = new Audio(url)
+        activeAudioElement = audio
+        audio.onended = () => {
+          URL.revokeObjectURL(url)
+          activeAudioElement = null
+          onEnd()
+        }
+        audio.onerror = () => {
+          URL.revokeObjectURL(url)
+          activeAudioElement = null
+          onError()
+        }
+        await audio.play()
+        return () => stopAlertAudio()
+      }
+    } catch (_) {}
+  }
+
+  // 4. Check OpenAI Audio API
+  if (openaiKey) {
+    try {
+      onStart()
+      const response = await fetch('https://api.openai.com/v1/audio/speech', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openaiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'tts-1',
+          voice: 'alloy',
+          input: text.slice(0, 500),
+        }),
+      })
+
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = URL.createObjectURL(blob)
+        const audio = new Audio(url)
+        activeAudioElement = audio
+        audio.onended = () => {
+          URL.revokeObjectURL(url)
+          activeAudioElement = null
+          onEnd()
+        }
+        audio.onerror = () => {
+          URL.revokeObjectURL(url)
+          activeAudioElement = null
+          onError()
+        }
+        await audio.play()
+        return () => stopAlertAudio()
+      }
+    } catch (_) {}
+  }
+
+  // 5. Browser Native SpeechSynthesis (Works out-of-the-box for English & Hindi on Windows, and all languages on Chrome/Android)
+  if (typeof window !== 'undefined' && window.speechSynthesis) {
+    const matchedVoice = findBestVoiceForLanguage(language)
+    try {
+      window.speechSynthesis.cancel()
+      const utterance = new SpeechSynthesisUtterance(text)
+      utterance.lang = config.bcp47
+      if (matchedVoice) {
+        utterance.voice = matchedVoice
+      }
+      utterance.rate = 0.92
+      utterance.pitch = 1.0
+
+      utterance.onstart = () => {
+        onStart()
+      }
+
+      utterance.onend = () => {
+        activeUtterance = null
+        onEnd()
+      }
+
+      utterance.onerror = () => {
+        activeUtterance = null
+        onError()
+      }
+
+      activeUtterance = utterance
+      window.speechSynthesis.speak(utterance)
+
+      return () => {
+        stopAlertAudio()
+        onEnd()
+      }
+    } catch {
+      onError()
+    }
+  }
+
+  onError()
+  return () => stopAlertAudio()
 }
 
 /**
@@ -283,10 +349,11 @@ export function stopAlertAudio(): void {
   }
   activeUtterance = null
 
-  if (activeAudioCleanup) {
+  if (activeAudioElement) {
     try {
-      activeAudioCleanup()
+      activeAudioElement.pause()
+      activeAudioElement.currentTime = 0
     } catch (_) {}
-    activeAudioCleanup = null
+    activeAudioElement = null
   }
 }
