@@ -1,3 +1,5 @@
+import { weatherRateLimiter, type RateLimitStatus } from './rateLimiter'
+
 export interface LiveWeatherData {
   city: string
   country: string
@@ -73,12 +75,19 @@ export async function fetchLiveWeather(
     return cachedWeather.data
   }
 
+  // Check client-side rate limit to prevent 429
+  if (!weatherRateLimiter.canMakeRequest() && cachedWeather) {
+    console.info('Weather request throttled by client-side rate limiter. Returning cached observations.')
+    return cachedWeather.data
+  }
+
   // 1. Primary: Try OpenWeatherMap API
   try {
     const url = city
       ? `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${apiKey}&units=metric`
       : `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`
 
+    weatherRateLimiter.recordRequest()
     const response = await fetch(url, { signal: AbortSignal.timeout(6000) })
 
     if (response.ok) {
@@ -178,7 +187,10 @@ export async function fetchLiveWeather(
   }
 }
 
-// City detection in natural language questions
+// Export rate limiter status for UI diagnostics
+export function getWeatherRateLimitStatus(): RateLimitStatus {
+  return weatherRateLimiter.getStatus()
+}
 export function extractCityFromQuery(query: string): string | undefined {
   const q = query.toLowerCase()
   const cities = [
@@ -196,3 +208,4 @@ export function extractCityFromQuery(query: string): string | undefined {
   }
   return undefined
 }
+

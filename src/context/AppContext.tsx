@@ -4,6 +4,7 @@ import { signOut as firebaseSignOut, subscribeToAuth } from '../integrations/fir
 import { createSnapshot, SCENARIOS } from '../domain/simulation'
 import { getDataProvider } from '../services/dataProvider'
 import type {
+  DataStreamMode,
   HazardKey,
   Mode,
   ScenarioKey,
@@ -11,6 +12,8 @@ import type {
   UserSettings,
   ViewId,
 } from '../domain/types'
+import { fetchLiveWeather, getWeatherRateLimitStatus, type LiveWeatherData } from '../services/weatherService'
+import type { RateLimitStatus } from '../services/rateLimiter'
 
 export type Phenomenon = 'ALL' | 'LIGHTNING' | 'HAIL' | 'CLOUDBURST' | 'DOWNBURST'
 
@@ -72,6 +75,12 @@ interface AppContextType {
   sidebarCollapsed: boolean
   setSidebarCollapsed: (collapsed: boolean | ((prev: boolean) => boolean)) => void
   scenarioRunCount: number
+  dataStreamMode: DataStreamMode
+  setDataStreamMode: (mode: DataStreamMode) => void
+  toggleDataStreamMode: () => void
+  liveWeather: LiveWeatherData | null
+  refreshLiveWeather: () => Promise<void>
+  rateLimitStatus: RateLimitStatus
 }
 
 const AppContext = createContext<AppContextType | null>(null)
@@ -90,6 +99,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [scenarioRunCount, setScenarioRunCount] = useState(0)
+
+  // Top-Level Data Stream Mode: Synthetic Simulation vs Real-Time Telemetry
+  const [dataStreamMode, setDataStreamMode] = useState<DataStreamMode>('SYNTHETIC')
+  const [liveWeather, setLiveWeather] = useState<LiveWeatherData | null>(null)
+  const [rateLimitStatus, setRateLimitStatus] = useState<RateLimitStatus>(() => getWeatherRateLimitStatus())
+
+  const refreshLiveWeather = async () => {
+    try {
+      const data = await fetchLiveWeather()
+      setLiveWeather(data)
+      setRateLimitStatus(getWeatherRateLimitStatus())
+    } catch (err) {
+      console.warn('Failed to refresh live weather telemetry:', err)
+    }
+  }
+
+  const toggleDataStreamMode = () => {
+    setDataStreamMode((prev) => (prev === 'SYNTHETIC' ? 'REAL_TIME' : 'SYNTHETIC'))
+  }
+
+  // Initial and periodic weather polling with client-side rate limiting
+  useEffect(() => {
+    refreshLiveWeather()
+    const timer = window.setInterval(() => {
+      refreshLiveWeather()
+    }, 60000)
+    return () => window.clearInterval(timer)
+  }, [])
 
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     return (window.localStorage.getItem('tt-theme') as 'dark' | 'light' | null) ?? 'dark'
@@ -173,11 +210,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [isStreaming, playbackSpeed])
 
   const modeFactor = mode === 'EMERGENCY' ? 1.08 : mode === 'AVIATION' ? 0.86 : mode === 'AGRICULTURE' ? 1.14 : 1.02
-  const dataProvider = useMemo(() => getDataProvider(), [])
+  const dataProvider = useMemo(() => getDataProvider(dataStreamMode), [dataStreamMode])
 
   const snapshot = useMemo(() => {
-    return dataProvider.getSnapshot(scenario, minute, modeFactor, selectedCellId)
-  }, [dataProvider, scenario, minute, modeFactor, selectedCellId])
+    return dataProvider.getSnapshot(scenario, minute, modeFactor, selectedCellId, liveWeather)
+  }, [dataProvider, scenario, minute, modeFactor, selectedCellId, liveWeather])
 
   const navigate = (view: ViewId) => {
     window.history.pushState({}, '', routeByView[view])
@@ -298,6 +335,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     sidebarCollapsed,
     setSidebarCollapsed,
     scenarioRunCount,
+    dataStreamMode,
+    setDataStreamMode,
+    toggleDataStreamMode,
+    liveWeather,
+    refreshLiveWeather,
+    rateLimitStatus,
   }
 
   return <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>

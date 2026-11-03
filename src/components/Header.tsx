@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
+  Activity,
   Clock3,
   CloudSun,
   Globe,
@@ -9,12 +10,13 @@ import {
   Menu,
   Moon,
   Radio,
+  RefreshCw,
+  SlidersHorizontal,
   Sun,
   Thermometer,
   Zap,
 } from 'lucide-react'
 import { useApp } from '../context/AppContext'
-import { fetchLiveWeather, type LiveWeatherData } from '../services/weatherService'
 
 const viewTitles: Record<string, string> = {
   command: 'Command Center',
@@ -51,18 +53,21 @@ export function Header() {
     user,
     signOut,
     setMobileMenuOpen,
+    dataStreamMode,
+    setDataStreamMode,
+    liveWeather,
+    refreshLiveWeather,
+    rateLimitStatus,
   } = useApp()
 
   const cell = snapshot.cells.find((c) => c.id === snapshot.selectedCellId) ?? snapshot.cells[0]
-  const [liveWeather, setLiveWeather] = useState<LiveWeatherData | null>(null)
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
-  useEffect(() => {
-    fetchLiveWeather().then(setLiveWeather).catch(() => {})
-    const timer = window.setInterval(() => {
-      fetchLiveWeather().then(setLiveWeather).catch(() => {})
-    }, 120000)
-    return () => window.clearInterval(timer)
-  }, [])
+  const handleRefreshSensors = async () => {
+    setIsRefreshing(true)
+    await refreshLiveWeather()
+    setTimeout(() => setIsRefreshing(false), 800)
+  }
 
   return (
     <header className="top-bar">
@@ -80,10 +85,12 @@ export function Header() {
           <span className="live-pip" title="Active Convective State" />
           <span className="top-context-label">{viewTitles[activeView]?.toUpperCase()}</span>
           <span className="top-separator" />
-          <span className="top-scenario-chip" title="Active Simulated Scenario">
+          <span className="top-scenario-chip" title="Active Convective State Source">
             <Radio size={12} />
             <b>{snapshot.scenarioLabel}</b>
-            <span className="scenario-clock-chip">T+{Math.round(minute)}m</span>
+            {dataStreamMode === 'SYNTHETIC' && (
+              <span className="scenario-clock-chip">T+{Math.round(minute)}m</span>
+            )}
           </span>
           <span className="top-separator hidden-mobile" />
           <span className="top-region hidden-tablet">
@@ -91,6 +98,29 @@ export function Header() {
             <span>COIMBATORE & TAMIL NADU RADAR SECTOR</span>
           </span>
         </div>
+      </div>
+
+      {/* Center Operational Mode Switcher: Synthetic Scenarios vs Real-Time Sensor Telemetry */}
+      <div className="stream-mode-control" role="group" aria-label="Telemetry Stream Source">
+        <button
+          className={`stream-mode-pill ${dataStreamMode === 'SYNTHETIC' ? 'active-synthetic' : ''}`}
+          onClick={() => setDataStreamMode('SYNTHETIC')}
+          title="Synthetic Mode: Pre-configured convective scenarios (Hail, Cloudburst, Downburst, Initiation) designed for stress-testing and judging demonstrations."
+          type="button"
+        >
+          <SlidersHorizontal size={12} />
+          <span>SYNTHETIC SCENARIOS</span>
+        </button>
+        <button
+          className={`stream-mode-pill ${dataStreamMode === 'REAL_TIME' ? 'active-realtime' : ''}`}
+          onClick={() => setDataStreamMode('REAL_TIME')}
+          title="Real-Time Mode: Ingests live telemetry from OpenWeatherMap & ground mesonet. Reflects real-world ambient weather."
+          type="button"
+        >
+          <span className="live-pulse-dot" />
+          <Activity size={12} />
+          <span>LIVE OPENWEATHER</span>
+        </button>
       </div>
 
       {/* Right Controls: Clock + Consensus Health + Demo Indicator + Theme + User */}
@@ -123,8 +153,21 @@ export function Header() {
           <span>{formatIst(snapshot.timestamp)}</span>
         </div>
 
+        {/* Manual Refresh & Rate Limit status when in Live Real-Time Mode */}
+        {dataStreamMode === 'REAL_TIME' && (
+          <button
+            className={`top-icon-button refresh-telemetry-btn ${isRefreshing ? 'is-spinning' : ''}`}
+            onClick={handleRefreshSensors}
+            title={`Refresh live weather telemetry. Rate limit: ${rateLimitStatus.used}/${rateLimitStatus.max} calls used this minute (Resets in ${rateLimitStatus.resetSeconds}s)`}
+            aria-label="Refresh live telemetry"
+            type="button"
+          >
+            <RefreshCw size={13} />
+          </button>
+        )}
+
         {/* Multi-Source Consensus */}
-        <div className="system-health hidden-mobile" title="Consensus across 5 telemetry feeds">
+        <div className="system-health hidden-mobile" title="Consensus across telemetry feeds">
           <span className="health-bars" aria-hidden="true">
             <i />
             <i />
@@ -136,13 +179,17 @@ export function Header() {
           </span>
         </div>
 
-        {/* Demo Mode disclosure badge */}
+        {/* Mode Disclosure Badge */}
         <div
-          className="demo-status-pill"
-          title="Notice: Research prototype using synthetic sensor streams"
+          className={`demo-status-pill ${dataStreamMode === 'REAL_TIME' ? 'realtime-badge' : 'synthetic-badge'}`}
+          title={
+            dataStreamMode === 'REAL_TIME'
+              ? `Live OpenWeather Telemetry active (${liveWeather?.city ?? 'Coimbatore'}). Rate limit: ${rateLimitStatus.used}/${rateLimitStatus.max} req/min.`
+              : 'Research prototype using synthetic convective scenarios'
+          }
         >
-          <span className="demo-pip" />
-          <span>SIMULATED STREAM</span>
+          <span className={`demo-pip ${dataStreamMode === 'REAL_TIME' ? 'green-pip' : ''}`} />
+          <span>{dataStreamMode === 'REAL_TIME' ? 'LIVE OPENWEATHER' : 'SIMULATED STREAM'}</span>
         </div>
 
         {/* Theme Toggle */}

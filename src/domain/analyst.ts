@@ -10,6 +10,7 @@ export interface PromptTemplate {
 
 export const SUGGESTED_PROMPTS: PromptTemplate[] = [
   { category: 'WEATHER', question: 'What is the current real-world temperature, humidity, and weather in Coimbatore?', shortLabel: 'Current live temperature' },
+  { category: 'WEATHER', question: 'Explain the difference between Synthetic Simulation Mode and Live Real Data Mode in TropoTrace.', shortLabel: 'Synthetic vs Real Data Mode' },
   { category: 'STORM', question: 'Explain the selected storm cell and its current lifecycle state.', shortLabel: 'Explain cell lifecycle' },
   { category: 'STORM', question: 'Why is this cell classified as severe?', shortLabel: 'Why severe rating?' },
   { category: 'STORM', question: 'What changed in this storm over the last 15 minutes?', shortLabel: 'What changed recently?' },
@@ -32,6 +33,12 @@ function buildSystemPrompt(snapshot: SimulationSnapshot, cell: StormCell, liveWe
     .join('\n  ')
 
   return `You are **TROPO**, an advanced meteorological AI copilot for the VAJRA-X Convective Intelligence Command Center. You operate under a strict ZERO-HALLUCINATION policy — every response must be grounded in the live convective nowcast data and the real-world ambient weather telemetry provided below. You are an expert in severe convective weather — thunderstorms, supercells, hailstorms, cloudbursts, downbursts, and mesoscale convective systems.
+
+## PLATFORM OPERATIONAL MODE: ${snapshot.dataStreamMode === 'REAL_TIME' ? 'LIVE REAL-WORLD TELEMETRY MODE' : 'SYNTHETIC SCENARIO SIMULATION MODE'}
+${snapshot.dataStreamMode === 'REAL_TIME'
+  ? `The operator has selected **LIVE REAL-WORLD TELEMETRY MODE** powered by OpenWeatherMap API and surface mesonet stations. You are reporting actual current observations from ${liveWeather.city}. If the current weather is calm, clear, or overcast without an active cloudburst or hailstorm, explain that ambient atmospheric conditions are nominal and severe convective hazards are not active at this hour. If asked, explain that real-world weather rarely produces cloudbursts on demand, which is why the platform also provides Synthetic Scenarios.`
+  : `The operator has selected **SYNTHETIC SIMULATION MODE** evaluating the ${snapshot.scenarioLabel} scenario. This deterministic mode stress-tests the system against simulated extreme convective initiation, severe hail, and cloudburst flooding so operators and judges can examine the platform's full decision-support capabilities on demand.`
+}
 
 ## REAL-WORLD CURRENT WEATHER OBSERVATIONS (${liveWeather.source})
 - **Location Target:** ${liveWeather.city}, ${liveWeather.country} (${liveWeather.lat.toFixed(3)}°N, ${liveWeather.lon.toFixed(3)}°E)

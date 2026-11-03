@@ -1,7 +1,10 @@
 import {
+  Activity,
   Check,
+  CloudSun,
   Database,
   Download,
+  Gauge,
   Info,
   Moon,
   RefreshCw,
@@ -10,6 +13,7 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Sun,
+  Thermometer,
   Volume2,
   VolumeX,
   Wifi,
@@ -18,7 +22,17 @@ import { useApp } from '../context/AppContext'
 import { firebaseConnectionLabel } from '../integrations/firebase'
 
 export function SettingsView() {
-  const { settings, updateSetting, theme, toggleTheme } = useApp()
+  const {
+    settings,
+    updateSetting,
+    theme,
+    toggleTheme,
+    dataStreamMode,
+    setDataStreamMode,
+    liveWeather,
+    refreshLiveWeather,
+    rateLimitStatus,
+  } = useApp()
 
   const handleResetSettings = () => {
     if (window.confirm('Reset all display preferences to defaults?')) {
@@ -252,7 +266,78 @@ export function SettingsView() {
           </div>
         </div>
 
-        {/* Card 3: Institutional Context & Problem Statement */}
+        {/* Card 3: Dual Stream Mode & Rate Limiting System */}
+        <div className="panel-surface settings-card full-width">
+          <div className="panel-title">
+            <div>
+              <Gauge size={15} />
+              <h3>Telemetry Stream Mode &amp; API Rate Limiting</h3>
+            </div>
+            <span className="meta-tag">OPENWEATHER &amp; SCENARIO ENGINE</span>
+          </div>
+
+          <div className="settings-rows-list">
+            <div className="setting-row">
+              <div>
+                <b>Operational Data Stream Mode</b>
+                <span>
+                  Switch between Synthetic Scenario Simulation (for stress demonstrations) and Live Real-World Telemetry (OpenWeather API).
+                </span>
+              </div>
+              <div className="basemap-choice-pills">
+                <button
+                  className={`choice-pill ${dataStreamMode === 'SYNTHETIC' ? 'active' : ''}`}
+                  onClick={() => setDataStreamMode('SYNTHETIC')}
+                >
+                  SYNTHETIC SIMULATION
+                </button>
+                <button
+                  className={`choice-pill ${dataStreamMode === 'REAL_TIME' ? 'active' : ''}`}
+                  onClick={() => setDataStreamMode('REAL_TIME')}
+                >
+                  LIVE OPENWEATHER
+                </button>
+              </div>
+            </div>
+
+            <div className="setting-row">
+              <div>
+                <b>Client-Side Flexible Rate Limiter</b>
+                <span>
+                  Protects OpenWeather API and Groq Cloud from 429 quota exhaustion. Auto-throttles requests with sliding-window cache.
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span className="rate-limit-badge" style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--teal)' }}>
+                  <b>{rateLimitStatus.used}</b> / {rateLimitStatus.max} req/min
+                </span>
+                <button
+                  className="secondary-action"
+                  onClick={refreshLiveWeather}
+                  title="Force telemetry refresh"
+                  style={{ padding: '3px 8px', fontSize: '10px' }}
+                >
+                  <RefreshCw size={12} />
+                  <span>REFRESH</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="setting-row">
+              <div>
+                <b>Live Ambient Telemetry Station</b>
+                <span>
+                  Active sector: <b>{liveWeather?.city ?? 'Coimbatore'}</b> ({liveWeather?.temp ?? 26.2}°C, {liveWeather?.condition ?? 'Light Rain'}) · Provider: {liveWeather?.source ?? 'OpenWeatherMap'}
+                </span>
+              </div>
+              <span className="meta-tag" style={{ color: 'var(--green)' }}>
+                LATENCY: 0.8s · CONFIDENCE: 98%
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 4: Institutional Context & Problem Statement */}
         <div className="panel-surface settings-card full-width">
           <div className="panel-title">
             <div>

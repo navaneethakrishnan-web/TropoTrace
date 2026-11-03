@@ -809,6 +809,82 @@ select:focus-visible {
   font-size: 9px;
 }
 
+/* Dual Operational Mode Switcher (Synthetic Scenarios vs Live Real-Time Telemetry) */
+.stream-mode-control {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-primary);
+  border: 1px solid var(--panel-border-bright);
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.stream-mode-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.stream-mode-pill:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.stream-mode-pill.active-synthetic {
+  color: var(--amber);
+  background: rgba(255, 200, 87, 0.12);
+  border-color: rgba(255, 200, 87, 0.35);
+  box-shadow: 0 0 10px rgba(255, 200, 87, 0.15);
+}
+
+.stream-mode-pill.active-realtime {
+  color: var(--teal);
+  background: rgba(56, 228, 192, 0.12);
+  border-color: rgba(56, 228, 192, 0.35);
+  box-shadow: 0 0 10px rgba(56, 228, 192, 0.18);
+}
+
+.live-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+  animation: pulse-live 1.8s infinite;
+}
+
+@keyframes pulse-live {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.7; }
+}
+
+.demo-status-pill.realtime-badge {
+  border-color: rgba(56, 228, 192, 0.35);
+  background: rgba(56, 228, 192, 0.08);
+  color: var(--teal);
+}
+
+.demo-pip.green-pip {
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+}
+
+.refresh-telemetry-btn.is-spinning svg {
+  animation: spin 0.8s linear infinite;
+}
+
 .cell-severity-pill {
   padding: 1px 5px;
   border-radius: 3px;

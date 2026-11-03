@@ -23,6 +23,7 @@ export type Severity = 'NORMAL' | 'WATCH' | 'ALERT' | 'WARNING' | 'SEVERE'
 export type Mode = 'EMERGENCY' | 'AVIATION' | 'AGRICULTURE' | 'URBAN'
 export type HazardKey = 'composite' | 'lightning' | 'hail' | 'wind' | 'rainfall' | 'cloudburst'
 export type LayerKey = 'riskGrid' | 'radar' | 'tracks' | 'lightning' | 'assets' | 'roads'
+export type DataStreamMode = 'SYNTHETIC' | 'REAL_TIME'
 
 export interface Point {
   x: number
@@ -102,6 +103,20 @@ export interface SimulationSnapshot {
   confidence: number
   lightningTotal: number
   changes: { label: string; value: string; trend: 'up' | 'down' | 'flat' }[]
+  dataStreamMode?: DataStreamMode
+  realWeather?: {
+    city: string
+    temp: number
+    feelsLike: number
+    humidity: number
+    pressure: number
+    windSpeedKmH: number
+    windDirection: string
+    condition: string
+    description: string
+    source: string
+    fetchedAt: string
+  }
 }
 
 export interface ScenarioDefinition {
