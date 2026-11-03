@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   AlertTriangle,
   ArrowRight,
@@ -25,6 +25,7 @@ import {
   generateCapXml,
   SUPPORTED_LANGUAGES,
 } from '../domain/alerts'
+import { playAlertAudio, stopAlertAudio } from '../services/speechService'
 import { formatEta } from '../domain/simulation'
 import type { AlertItem, Severity } from '../domain/types'
 
@@ -64,23 +65,35 @@ export function AlertCenterView() {
     } catch (_) { /* fallback */ }
   }
 
-  // Audio Speech Synthesis
-  const handleAudioToggle = () => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) {
-      return
+  // Clean up audio on unmount
+  useEffect(() => {
+    return () => {
+      stopAlertAudio()
     }
+  }, [])
 
+  // Language switch handler: resets audio so new language speaks cleanly
+  const handleLanguageChange = (lang: string) => {
     if (isPlayingAudio) {
-      window.speechSynthesis.cancel()
+      stopAlertAudio()
+      setIsPlayingAudio(false)
+    }
+    setSelectedLanguage(lang)
+  }
+
+  // Audio Speech Synthesis across all Indian languages
+  const handleAudioToggle = () => {
+    if (isPlayingAudio) {
+      stopAlertAudio()
       setIsPlayingAudio(false)
     } else {
-      window.speechSynthesis.cancel()
-      const utterance = new SpeechSynthesisUtterance(alertText)
-      utterance.rate = 0.95
-      utterance.onend = () => setIsPlayingAudio(false)
-      utterance.onerror = () => setIsPlayingAudio(false)
-      window.speechSynthesis.speak(utterance)
-      setIsPlayingAudio(true)
+      playAlertAudio(
+        alertText,
+        selectedLanguage,
+        () => setIsPlayingAudio(true),
+        () => setIsPlayingAudio(false),
+        () => setIsPlayingAudio(false)
+      )
     }
   }
 
@@ -226,7 +239,7 @@ export function AlertCenterView() {
                   <button
                     key={lang.key}
                     className={`lang-btn ${selectedLanguage === lang.key ? 'active' : ''}`}
-                    onClick={() => setSelectedLanguage(lang.key)}
+                    onClick={() => handleLanguageChange(lang.key)}
                   >
                     <span>{lang.code}</span>
                     <small>{lang.label}</small>
