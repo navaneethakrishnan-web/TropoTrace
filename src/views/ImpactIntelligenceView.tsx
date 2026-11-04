@@ -29,7 +29,6 @@ import {
   TWIN_ASSETS,
   HAZARD_PROFILES,
   computeTwinMetrics,
-  WORKFLOW_STAGES,
 } from '../domain/impactTwin'
 import { AdaptiveImpactTwinMap } from '../components/AdaptiveImpactTwinMap'
 import { AssetDecisionCard } from '../components/AssetDecisionCard'
@@ -65,18 +64,20 @@ export function ImpactIntelligenceView() {
 
   const activeStormCell = snapshot.cells[0] || {
     id: 'VX-1A7',
-    lat: 11.1085,
-    lng: 77.2600,
+    name: 'Cell Alpha-1',
+    centroid: { x: 77.26, y: 11.1085 },
     intensity: 78,
-    speedKmh: 42,
-    directionDeg: 78,
-    arrivalMinutes: 28,
-    dbz: 58,
-    vil: 44,
-    meshMm: 24,
-    poshPct: 82,
-    trend: 'INTENSIFYING',
-    hazardTypes: ['CLOUDBURST', 'LIGHTNING', 'EXTREME_RAINFALL'],
+    reflectivity: 58,
+    speed: 42,
+    direction: 'ENE',
+    directionDegrees: 78,
+    ageMinutes: 35,
+    lifecycle: 'INTENSIFYING',
+    lightningRate: 48,
+    rainfallRate: 65,
+    hailProbability: 75,
+    windProbability: 80,
+    cloudburstProbability: 85,
   }
 
   const twinMetrics = computeTwinMetrics(
@@ -107,20 +108,16 @@ export function ImpactIntelligenceView() {
   ]
 
   return (
-    <div className="view-stack impact-intelligence-view space-y-6">
+    <div className="view-stack impact-intelligence-view">
       {/* View Header */}
-      <div className="view-header flex flex-wrap items-center justify-between gap-4">
+      <div className="view-header">
         <div>
-          <div className="eyebrow flex items-center gap-2">
+          <div className="eyebrow">
             <span className="eyebrow-line" />
-            <span className="text-xs uppercase tracking-wider text-cyan-400 font-bold">
-              MODULE 04 · ANIMATED ADAPTIVE IMPACT TWIN &amp; DECISION INTELLIGENCE
-            </span>
+            <span>MODULE 04 · ANIMATED ADAPTIVE IMPACT TWIN &amp; DECISION INTELLIGENCE</span>
           </div>
-          <h2 className="text-2xl font-black text-white tracking-tight mt-1">
-            Adaptive Impact Twin
-          </h2>
-          <p className="text-sm text-slate-300 max-w-3xl mt-1 leading-relaxed">
+          <h2>Adaptive Impact Twin</h2>
+          <p>
             Continuous georeferenced simulation translating weather physics, topography, and asset vulnerability
             into actionable decision intelligence.
           </p>
@@ -143,45 +140,43 @@ export function ImpactIntelligenceView() {
       </div>
 
       {/* Operational Lens Priority Banner */}
-      <div className="impact-mode-banner panel-surface flex items-center justify-between p-4 rounded-xl border border-slate-700/60 bg-slate-900/80">
-        <div className="flex items-center gap-3">
-          <div className="mode-banner-icon p-2 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-400/30">
-            <ModeIcon size={22} />
-          </div>
-          <div className="mode-banner-text">
-            <div className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-400">
-              OPERATIONAL LENS: {mode} PRIORITY
-            </div>
-            <div className="text-xs font-medium text-slate-200 mt-0.5">
-              {mode === 'EMERGENCY'
-                ? 'Civil defense prioritization: Population evacuation zones, shelters, arterial roads, and trauma centers.'
-                : mode === 'AVIATION'
-                ? 'Aviation logistics: Runway crosswinds, low-level windshear, approach holding, and ramp lightning stoppage.'
-                : mode === 'AGRICULTURE'
-                ? 'Horticultural protection: Hail damage to cash crops, standing water inundation, and livestock shelter.'
-                : 'Urban infrastructure: Storm drain capacity, subway underpasses, power substations, and transit corridors.'}
-            </div>
-          </div>
+      <div className="impact-mode-banner panel-surface">
+        <div className="mode-banner-icon">
+          <ModeIcon size={22} />
         </div>
-        <div className="mode-banner-status flex items-center gap-2 text-xs font-mono text-emerald-400">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+        <div className="mode-banner-text">
+          <span>OPERATIONAL LENS: {mode} PRIORITY</span>
+          <b>
+            {mode === 'EMERGENCY'
+              ? 'Civil defense prioritization: Population evacuation zones, shelters, arterial roads, and trauma centers.'
+              : mode === 'AVIATION'
+              ? 'Aviation logistics: Runway crosswinds, low-level windshear, approach holding, and ramp lightning stoppage.'
+              : mode === 'AGRICULTURE'
+              ? 'Horticultural protection: Hail damage to cash crops, standing water inundation, and livestock shelter.'
+              : 'Urban infrastructure: Storm drain capacity, subway underpasses, power substations, and transit corridors.'}
+          </b>
+        </div>
+        <div className="mode-banner-status">
+          <span className="status-dot green" />
           <span>Adaptive Twin Synced</span>
         </div>
       </div>
 
       {/* Interactive Weather Hazard Selector Toolbar */}
-      <div className="bg-[#0f172a]/90 backdrop-blur-md p-3.5 rounded-2xl border border-slate-700/80 shadow-lg flex flex-col gap-2">
-        <div className="flex items-center justify-between text-xs px-1">
-          <span className="font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-            Select Weather Hazard Layer for Simulation:
-          </span>
-          <span className="font-mono text-cyan-400 text-[11px]">
-            Active: {HAZARD_PROFILES[selectedHazard].name}
-          </span>
+      <div className="panel-surface twin-hazard-toolbar">
+        <div className="twin-hazard-toolbar-header">
+          <div className="toolbar-header-left">
+            <Sparkles size={14} className="icon-cyan" />
+            <span className="header-label">SELECT WEATHER HAZARD SIMULATION LAYER:</span>
+          </div>
+          <div className="toolbar-header-right">
+            <span className="active-hazard-indicator" style={{ color: HAZARD_PROFILES[selectedHazard].color }}>
+              ACTIVE: <b>{HAZARD_PROFILES[selectedHazard].name.toUpperCase()}</b>
+            </span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+        <div className="twin-hazard-buttons-grid">
           {hazardButtons.map((hb) => {
             const isSelected = selectedHazard === hb.key
             const Icon = hb.icon
@@ -189,22 +184,21 @@ export function ImpactIntelligenceView() {
               <button
                 key={hb.key}
                 onClick={() => setSelectedHazard(hb.key)}
-                className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold transition-all border ${
-                  isSelected
-                    ? 'bg-slate-800 text-white shadow-md'
-                    : 'bg-slate-900/60 hover:bg-slate-900 text-slate-400 hover:text-slate-200 border-slate-800'
-                }`}
+                className={`twin-hazard-btn ${isSelected ? 'active' : ''}`}
                 style={
                   isSelected
                     ? {
                         borderColor: hb.color,
-                        boxShadow: `0 0 14px ${hb.color}33`,
+                        boxShadow: `0 0 16px ${hb.color}40`,
+                        background: `linear-gradient(135deg, rgba(22, 46, 39, 0.95), rgba(16, 34, 29, 0.98))`,
                       }
                     : {}
                 }
               >
-                <Icon className="w-4 h-4 shrink-0" style={{ color: hb.color }} />
-                <span className="truncate">{hb.label}</span>
+                <span className="hazard-btn-icon" style={{ color: hb.color }}>
+                  <Icon size={16} />
+                </span>
+                <span className="hazard-btn-text">{hb.label}</span>
               </button>
             )
           })}
@@ -218,29 +212,27 @@ export function ImpactIntelligenceView() {
       />
 
       {/* Primary Map Visualizer: Adaptive Impact Twin */}
-      <div className="panel-surface impact-map-container rounded-2xl border border-slate-700 overflow-hidden shadow-2xl bg-slate-950 p-0 relative">
-        <div className="panel-header map-panel-header px-5 py-3.5 border-b border-slate-800 bg-slate-900/90 flex flex-wrap items-center justify-between gap-2">
+      <div className="panel-surface twin-map-panel-container">
+        <div className="panel-header map-panel-header">
           <div>
-            <div className="panel-kicker text-xs uppercase tracking-wider font-mono text-cyan-400 flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5" />
+            <div className="panel-kicker">
+              <Layers size={14} />
               <span>GEOGRAPHIC ADAPTIVE TWIN CANVAS · HIGHWAY &amp; URBAN ASSETS</span>
             </div>
-            <h3 className="text-base font-bold text-white mt-0.5">
-              Live Convective Swath vs Vulnerable Infrastructure
-            </h3>
+            <h3>Live Convective Swath vs Vulnerable Infrastructure</h3>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-1 rounded-full text-[11px] font-mono bg-cyan-950/80 text-cyan-300 border border-cyan-800/60">
-              Storm: {activeStormCell.id} · {activeStormCell.intensity}% Intensity
+          <div className="twin-map-tags">
+            <span className="twin-tag-storm">
+              CELL: <b>{activeStormCell.id}</b> · {activeStormCell.intensity}% INTENSITY
             </span>
-            <span className="px-2.5 py-1 rounded-full text-[11px] font-mono bg-rose-950/80 text-rose-300 border border-rose-800/60">
-              Severity: {twinMetrics.severity}
+            <span className={`twin-tag-severity severity-${twinMetrics.severity.toLowerCase()}`}>
+              SEVERITY: <b>{twinMetrics.severity}</b>
             </span>
           </div>
         </div>
 
         {/* Interactive Map */}
-        <div className="w-full relative" style={{ minHeight: '520px' }}>
+        <div className="twin-map-wrapper-box">
           <AdaptiveImpactTwinMap
             height="520px"
             hazard={selectedHazard}
@@ -256,7 +248,7 @@ export function ImpactIntelligenceView() {
       </div>
 
       {/* Interactive Controls: Before / After Slider + 4D Timeline Bar */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="twin-controls-row">
         {/* Before / After Slider Control */}
         <BeforeAfterSliderControl
           mode={beforeAfterMode}
@@ -271,38 +263,35 @@ export function ImpactIntelligenceView() {
           currentMinute={timelineMinute}
           minMinute={0}
           maxMinute={60}
-          arrivalMinute={activeStormCell.arrivalMinutes}
+          arrivalMinute={28}
           onMinuteChange={setTimelineMinute}
         />
       </div>
 
       {/* Asset Decision Intelligence & Inspector */}
-      <div className="space-y-3">
+      <div className="twin-decision-wrapper-section">
         {/* Quick Asset Selector Tabs */}
-        <div className="flex items-center justify-between flex-wrap gap-2 px-1">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-            <MapPin className="w-3.5 h-3.5 text-cyan-400" />
-            Inspect Critical Infrastructure Nodes:
-          </span>
-          <span className="text-xs text-slate-400">
-            Click any pin on map or button below to inspect decision status
-          </span>
+        <div className="twin-asset-strip-header">
+          <div className="strip-title">
+            <MapPin size={14} className="icon-cyan" />
+            <span>INSPECT CRITICAL INFRASTRUCTURE NODES:</span>
+          </div>
+          <div className="strip-hint">
+            Select any asset below or click a map pin to inspect real-time decision synthesis
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+        <div className="twin-asset-selector-pills">
           {TWIN_ASSETS.map((asset) => {
             const isSelected = selectedAsset.id === asset.id
             return (
               <button
                 key={asset.id}
                 onClick={() => setSelectedAsset(asset)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all border ${
-                  isSelected
-                    ? 'bg-cyan-600 text-white font-bold border-cyan-400 shadow-md'
-                    : 'bg-slate-900/80 hover:bg-slate-800 text-slate-300 border-slate-700/80'
-                }`}
+                className={`twin-asset-pill-btn ${isSelected ? 'active' : ''}`}
               >
-                {asset.name}
+                <span className={`asset-pill-dot ${asset.vulnerability.toLowerCase()}`} />
+                <span>{asset.name}</span>
               </button>
             )
           })}

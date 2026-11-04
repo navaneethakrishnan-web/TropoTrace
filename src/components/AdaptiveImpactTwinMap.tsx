@@ -50,8 +50,10 @@ export function AdaptiveImpactTwinMap({
   // Calculate dynamic storm center based on speed, direction, and timeline
   const getDynamicStormPos = (): [number, number] => {
     const elapsedHrs = (timelineMinute - 0) / 60
-    const latShift = (elapsedHrs * activeCell.speed * 0.007) * (activeCell.direction.includes('N') ? 1 : -0.5)
-    const lngShift = (elapsedHrs * activeCell.speed * 0.009) * (activeCell.direction.includes('E') ? 1 : -0.5)
+    const speed = typeof activeCell.speed === 'number' ? activeCell.speed : 42
+    const dir = typeof activeCell.direction === 'string' ? activeCell.direction : 'ENE'
+    const latShift = (elapsedHrs * speed * 0.007) * (dir.includes('N') ? 1 : -0.5)
+    const lngShift = (elapsedHrs * speed * 0.009) * (dir.includes('E') ? 1 : -0.5)
     return [11.06 + latShift, 77.08 + lngShift]
   }
 

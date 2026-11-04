@@ -405,7 +405,8 @@ export function computeTwinMetrics(
   snapshot: SimulationSnapshot
 ) {
   const profile = HAZARD_PROFILES[hazard]
-  const arrival = Math.max(0, Math.round(cell.arrivalMinutes - minute))
+  const cellArrival = (cell as any).arrivalMinutes ?? snapshot.nextArrivalMinutes ?? 28
+  const arrival = Math.max(0, Math.round(cellArrival - minute))
   const isApproaching = arrival > 0 && arrival <= 45
   const isImpactActive = arrival === 0 || (arrival < 0 && arrival > -30)
 
@@ -434,3 +435,4 @@ export function computeTwinMetrics(
     primaryRadiusKm: Math.round(profile.primaryRiskRadiusMeters / 1000),
   }
 }
+

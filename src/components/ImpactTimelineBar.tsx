@@ -3,7 +3,6 @@ import {
   Play,
   Pause,
   RotateCcw,
-  FastForward,
   Clock,
   AlertTriangle,
   ChevronLeft,
@@ -11,7 +10,7 @@ import {
 } from 'lucide-react'
 
 interface ImpactTimelineBarProps {
-  currentMinute: number // e.g. -30 to +45 or 0 to 60
+  currentMinute: number // e.g. 0 to 60
   minMinute?: number
   maxMinute?: number
   arrivalMinute: number
@@ -41,131 +40,120 @@ export const ImpactTimelineBar: React.FC<ImpactTimelineBarProps> = ({
 
   const timeToArrival = arrivalMinute - currentMinute
   const formatTimeLabel = () => {
-    if (timeToArrival === 0) return 'T=0m • CONVECTIVE CORE OVERHEAD'
-    if (timeToArrival > 0) return `T-${timeToArrival}m • PRIOR TO CONVECTIVE OVERHEAD`
-    return `T+${Math.abs(timeToArrival)}m • POST-IMPACT RECESSION PHASE`
+    if (timeToArrival === 0) return 'T=0m · CONVECTIVE CORE OVERHEAD'
+    if (timeToArrival > 0) return `T-${timeToArrival}m · PRIOR TO CONVECTIVE OVERHEAD`
+    return `T+${Math.abs(timeToArrival)}m · POST-IMPACT RECESSION PHASE`
   }
 
-  const milestones = [
-    { minute: 5, label: 'T-30m Radar Lock' },
-    { minute: 15, label: 'T-20m Action Deadline' },
-    { minute: 35, label: 'T=0 Overhead Core' },
-    { minute: 50, label: 'T+15m Dissipation' },
-  ]
-
   return (
-    <div className="bg-[#0f172a]/95 backdrop-blur-md rounded-2xl border border-slate-700/80 p-4 shadow-xl text-slate-100 flex flex-col gap-3 font-sans">
+    <div className="panel-surface twin-timeline-card">
       {/* Top Controls Row */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-400">
-            <Clock className="w-4 h-4" />
+      <div className="twin-timeline-header">
+        <div className="twin-timeline-title-wrap">
+          <div className="twin-timeline-icon">
+            <Clock size={16} />
           </div>
           <div>
-            <div className="text-xs uppercase tracking-wider font-bold text-cyan-400 flex items-center gap-2">
-              <span>Interactive 4D Impact Timeline</span>
-              <span className="text-slate-500">•</span>
-              <span className="font-mono text-amber-300 font-semibold">{formatTimeLabel()}</span>
+            <div className="twin-timeline-kicker">
+              <span>4D IMPACT TIMELINE SCRUBBER</span>
+              <span className="kicker-sep">·</span>
+              <b className="kicker-highlight">{formatTimeLabel()}</b>
             </div>
-            <div className="text-xs text-slate-400">
-              Scrub or play through the convective storm lifecycle and asset exposure window
+            <div className="twin-timeline-title">
+              Temporal Storm Lifecycle &amp; Asset Exposure Swath
             </div>
           </div>
         </div>
 
         {/* Playback Button Group */}
-        <div className="flex items-center gap-2">
+        <div className="twin-timeline-controls">
           {/* Speed selector */}
-          <div className="flex items-center bg-slate-900 border border-slate-700 rounded-lg p-0.5 text-xs">
+          <div className="segmented-control speed-segmented">
             {[1, 2, 5].map((s) => (
               <button
                 key={s}
                 onClick={() => setSpeed(s)}
-                className={`px-2 py-1 rounded transition-colors font-mono ${
-                  speed === s
-                    ? 'bg-cyan-600 text-white font-bold'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
+                className={speed === s ? 'active' : ''}
               >
-                {s}x
+                {s}X
               </button>
             ))}
           </div>
 
           <button
             onClick={() => onMinuteChange(minMinute)}
-            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors"
-            title="Reset to Start"
+            className="twin-timeline-icon-btn"
+            title="Reset to 0m"
           >
-            <RotateCcw className="w-4 h-4" />
+            <RotateCcw size={13} />
           </button>
 
           <button
             onClick={() => onMinuteChange(Math.max(minMinute, currentMinute - 5))}
-            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors"
+            className="twin-timeline-icon-btn"
             title="Step Back 5 Min"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft size={14} />
           </button>
 
           <button
             onClick={() => setIsPlaying(!isPlaying)}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md ${
-              isPlaying
-                ? 'bg-amber-500 hover:bg-amber-400 text-slate-950'
-                : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950'
-            }`}
+            className={`twin-timeline-play-btn ${isPlaying ? 'playing' : ''}`}
           >
             {isPlaying ? (
               <>
-                <Pause className="w-4 h-4 fill-current" />
-                <span>Pause</span>
+                <Pause size={13} />
+                <span>PAUSE</span>
               </>
             ) : (
               <>
-                <Play className="w-4 h-4 fill-current" />
-                <span>Play Simulation</span>
+                <Play size={13} />
+                <span>PLAY</span>
               </>
             )}
           </button>
 
           <button
             onClick={() => onMinuteChange(Math.min(maxMinute, currentMinute + 5))}
-            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors"
+            className="twin-timeline-icon-btn"
             title="Step Forward 5 Min"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight size={14} />
           </button>
         </div>
       </div>
 
       {/* Scrubbable Timeline Track */}
-      <div className="space-y-1.5 pt-1">
-        <div className="relative">
+      <div className="twin-timeline-track-wrapper">
+        <div className="twin-timeline-track-inner">
           <input
             type="range"
             min={minMinute}
             max={maxMinute}
             value={currentMinute}
             onChange={(e) => onMinuteChange(Number(e.target.value))}
-            className="w-full h-3 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+            className="twin-timeline-slider"
+            style={{
+              background: `linear-gradient(to right, #38e4c0 0%, #ffc857 ${(20 / maxMinute) * 100}%, #ff4438 ${(arrivalMinute / maxMinute) * 100}%, #1a332b ${(arrivalMinute / maxMinute) * 100}%, #1a332b 100%)`,
+            }}
           />
 
-          {/* Critical action threshold marker */}
+          {/* Action deadline marker indicator */}
           <div
-            className="absolute top-0 bottom-0 w-0.5 bg-amber-400 pointer-events-none"
+            className="twin-deadline-pin"
             style={{ left: `${(15 / maxMinute) * 100}%` }}
             title="Action Deadline: T+20 min"
           />
         </div>
 
         {/* Milestone Labels Row */}
-        <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 pt-1">
+        <div className="twin-timeline-milestones">
           <span>0m (Now)</span>
-          <span className="text-amber-400 flex items-center gap-1">
-            <AlertTriangle className="w-3 h-3 inline" /> T-20m Action Deadline
+          <span className="milestone-deadline">
+            <AlertTriangle size={11} />
+            <span>T-20m Action Deadline</span>
           </span>
-          <span className="text-rose-400">T=0m Peak Inundation</span>
+          <span className="milestone-peak">T=0m Peak Inundation</span>
           <span>+{maxMinute}m</span>
         </div>
       </div>
