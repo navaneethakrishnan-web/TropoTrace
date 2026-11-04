@@ -34,6 +34,7 @@ export const routeByView: Record<ViewId, string> = {
   impact: '/impact-intelligence',
   alerts: '/alert-center',
   observatory: '/data-observatory',
+  gnn: '/gnn-assimilation',
   simulation: '/simulation-lab',
   verification: '/verification',
   analyst: '/analyst',

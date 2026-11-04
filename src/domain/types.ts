@@ -5,6 +5,7 @@ export type ViewId =
   | 'impact'
   | 'alerts'
   | 'observatory'
+  | 'gnn'
   | 'simulation'
   | 'verification'
   | 'analyst'

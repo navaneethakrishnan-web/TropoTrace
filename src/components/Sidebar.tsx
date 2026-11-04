@@ -12,6 +12,7 @@ import {
   RadioTower,
   RefreshCw,
   Settings2,
+  Share2,
   ShieldAlert,
   X,
 } from 'lucide-react'
@@ -54,6 +55,7 @@ export function Sidebar() {
       badge: unreviewedCount > 0 ? `0${unreviewedCount}` : undefined,
     },
     { id: 'observatory', label: 'Data Observatory', icon: RadioTower, group: 'Scientific Lab' },
+    { id: 'gnn', label: 'GNN Assimilation', icon: Share2 },
     { id: 'simulation', label: 'Simulation Lab', icon: RefreshCw },
     { id: 'verification', label: 'Model Verification', icon: BarChart3 },
     { id: 'analyst', label: 'Tropo', icon: Bot, group: 'Intelligence Tools' },

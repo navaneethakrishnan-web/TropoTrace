@@ -12,6 +12,7 @@ import {
   RefreshCw,
   Search,
   Server,
+  Share2,
   ShieldCheck,
   Waves,
   Wifi,
@@ -26,7 +27,7 @@ import {
 import type { DataSource } from '../domain/types'
 
 export function DataObservatoryView() {
-  const { snapshot } = useApp()
+  const { snapshot, navigate } = useApp()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedSourceFilter, setSelectedSourceFilter] = useState('ALL')
 
@@ -59,11 +60,21 @@ export function DataObservatoryView() {
           </p>
         </div>
 
-        <div className="observatory-status-pill">
-          <span className="status-dot green" />
-          <span>
-            {snapshot.sources.filter((s) => s.status === 'ONLINE').length} / {snapshot.sources.length} SOURCES ONLINE
-          </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate('gnn')}
+            className="gnn-quick-nav-pill"
+            title="Launch Graph Neural Network Data Assimilation"
+          >
+            <Share2 size={13} />
+            <span>GNN ASSIMILATION ENGINE</span>
+          </button>
+          <div className="observatory-status-pill">
+            <span className="status-dot green" />
+            <span>
+              {snapshot.sources.filter((s) => s.status === 'ONLINE').length} / {snapshot.sources.length} SOURCES ONLINE
+            </span>
+          </div>
         </div>
       </div>
 

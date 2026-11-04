@@ -15,6 +15,7 @@ import { AnalystView } from '../views/AnalystView'
 import { AuthView } from '../views/AuthView'
 import { CommandCenterView } from '../views/CommandCenterView'
 import { DataObservatoryView } from '../views/DataObservatoryView'
+import { GnnAssimilationView } from '../views/GnnAssimilationView'
 import { HazardExplorerView } from '../views/HazardExplorerView'
 import { ImpactIntelligenceView } from '../views/ImpactIntelligenceView'
 import { ModelVerificationView } from '../views/ModelVerificationView'
@@ -76,6 +77,7 @@ function AppShell() {
           {activeView === 'impact' && <ImpactIntelligenceView />}
           {activeView === 'alerts' && <AlertCenterView />}
           {activeView === 'observatory' && <DataObservatoryView />}
+          {activeView === 'gnn' && <GnnAssimilationView />}
           {activeView === 'simulation' && <SimulationLabView />}
           {activeView === 'verification' && <ModelVerificationView />}
           {activeView === 'analyst' && <AnalystView />}
